@@ -1,3 +1,7 @@
+// https://github.com/ut-khanlab/master_thesis_template_for_typst
+
+#set text(lang: "ja")
+
 // Store theorem environment numbering
 #let thmcounters = state("thm",
   (
@@ -263,7 +267,14 @@
 // Definition of chapter outline
 #let toc() = {
   align(left)[
-    #text(size: 20pt, weight: "bold")[
+    #text(
+      font: (
+        "Times New Roman",
+        "UDEV Gothic"
+      ),
+      size: 20pt,
+      weight: "medium"
+    )[
       #v(30pt)
       目次
       #v(30pt)
@@ -289,20 +300,43 @@
         } else {none}
 
         if el.level == 1 {
-          set text(weight: "black")
+          set text(
+            font: (
+              "Times New Roman",
+              "UDEV Gothic"
+            ),
+            weight: "regular"
+          )
           if chapt_num == none {} else {
+            set text(
+              weight: "bold"
+            )
             chapt_num
-            "  "
+            "  :  "
           }
           let rebody = to-string(el.body)
           rebody
         } else if el.level == 2 {
+          set text(
+            font: (
+              "Times New Roman",
+              "Source Han Serif JP"
+            ),
+            weight: "regular"
+          )
           h(2em)
           chapt_num
           " "
           let rebody = to-string(el.body)
           rebody
         } else {
+          set text(
+            font: (
+              "Times New Roman",
+              "Source Han Serif JP"
+            ),
+            weight: "regular"
+          )
           h(5em)
           chapt_num
           " "
@@ -513,12 +547,13 @@
 
   // Set the body font. TeX Gyre Pagella is a free alternative
   // to Palatino.
-  set text(font: (
-    "Nimbus Roman",
-    // "Hiragino Mincho ProN",
-    // "MS Mincho",
-    "Noto Serif CJK JP",
-    ), size: 12pt)
+  set text(
+    font: (
+      "Times New Roman",
+      "HanaMinA"
+    ),
+    size: 12pt
+  )
 
   // Configure the page properties.
   set page(
@@ -528,6 +563,13 @@
 
   // The first page.
   align(center)[
+    #set text(
+      font: (
+        "Times New Roman",
+        "Source Han Serif JP"
+      )
+    )
+
     #v(80pt)
     #text(
       size: 16pt,
@@ -543,6 +585,7 @@
     #v(40pt)
     #text(
       size: 22pt,
+      font: "UDEV Gothic"
     )[
       #title
     ]
@@ -553,11 +596,11 @@
       #id #author
     ]
 
-    #text(
-      size: 16pt,
-    )[
-      指導教員: #mentor #mentor-post
-    ]
+    // #text(
+    //   size: 16pt,
+    // )[
+    //   指導教員: #mentor #mentor-post
+    // ]
     #v(40pt)
     #text(
       size: 16pt,
@@ -575,8 +618,8 @@
 
   counter(page).update(1)
   // Show abstruct
-  abstract_page(abstract_ja, abstract_en, keywords_ja: keywords_ja, keywords_en: keywords_en)
-  pagebreak()
+  // abstract_page(abstract_ja, abstract_en, keywords_ja: keywords_ja, keywords_en: keywords_en)
+  // pagebreak()
 
   // Configure paragraph properties.
   set par(leading: 0.78em, first-line-indent: 12pt, justify: true)
@@ -584,31 +627,62 @@
 
    // Configure chapter headings.
   set heading(numbering: (..nums) => {
-    nums.pos().map(str).join(".") + " "
+    nums.pos().map(str).join(".")
   })
   show heading.where(level: 1): it => {
     pagebreak()
     counter(math.equation).update(0)
-    set text(weight: "bold", size: 20pt)
+    set text(
+      font: (
+        "Times New Roman",
+        "UDEV Gothic"
+      ),
+      weight: "medium",
+      size: 20pt
+    )
     set block(spacing: 1.5em)
     let pre_chapt = if it.numbering != none {
-          text()[
-            #v(50pt)
-            第
-            #numbering(it.numbering, ..counter(heading).at(it.location()))
-            章
-          ] 
-        } else {none}
+      text()[
+        #v(50pt)
+        第
+        #numbering(it.numbering, ..counter(heading).at(it.location()))
+        章
+      ] 
+    } else {none}
     text()[
       #pre_chapt \
       #it.body \
-      #v(50pt)
+      #v(30pt)
     ]
   }
   show heading.where(level: 2): it => {
-    set text(weight: "bold", size: 16pt)
+    set text(
+      font: (
+        "Times New Roman",
+        "UDEV Gothic"
+      ),
+      weight: "medium",
+      size: 16pt
+    )
     set block(above: 1.5em, below: 1.5em)
-    it
+    text()[
+      #it
+      #v(5pt)
+    ]
+  }
+  show heading.where(level: 3): it => {
+    set text(
+      font: (
+        "Times New Roman",
+        "UDEV Gothic"
+      ),
+      weight: "medium",
+      size: 16pt
+    )
+    text()[
+      #it
+      #v(5pt)
+    ]
   }
 
   show heading: it => {
@@ -620,10 +694,10 @@
 
   // Start with a chapter outline.
   toc()
-  pagebreak()
-  toc_img()
-  pagebreak()
-  toc_tbl()
+  // pagebreak()
+  // toc_img()
+  // pagebreak()
+  // toc_tbl()
 
   set page(
     footer: [
