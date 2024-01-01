@@ -312,7 +312,7 @@
               weight: "bold"
             )
             chapt_num
-            "  :  "
+            h(1em)
           }
           let rebody = to-string(el.body)
           rebody
@@ -326,7 +326,6 @@
           )
           h(2em)
           chapt_num
-          " "
           let rebody = to-string(el.body)
           rebody
         } else {
@@ -339,13 +338,12 @@
           )
           h(5em)
           chapt_num
-          " "
           let rebody = to-string(el.body)
           rebody
         }
       }]
       box(width: 1fr, h(0.5em) + box(width: 1fr, repeat[.]) + h(0.5em))
-      [#page_num]
+      [p. #page_num]
       linebreak()
     }
   })
@@ -550,15 +548,24 @@
   set text(
     font: (
       "Times New Roman",
-      "HanaMinA"
+      "Source Han Serif JP"
     ),
     size: 12pt
+  )
+  show strong: set text(
+    font: (
+      "Times New Roman",
+      "IPAPGothic"
+    )
   )
 
   // Configure the page properties.
   set page(
     paper: paper-size,
-    margin: (bottom: 1.75cm, top: 2.25cm),
+    margin: (
+      bottom: 1.75cm, top: 2.5cm,
+      left: 2cm, right: 2cm
+    ),
   )
 
   // The first page.
@@ -622,12 +629,16 @@
   // pagebreak()
 
   // Configure paragraph properties.
-  set par(leading: 0.78em, first-line-indent: 12pt, justify: true)
-  show par: set block(spacing: 0.78em)
+  set par(leading: 0.8em, first-line-indent: 20pt, justify: true)
+  show par: set block(spacing: 0.8em)
 
    // Configure chapter headings.
   set heading(numbering: (..nums) => {
-    nums.pos().map(str).join(".")
+    if nums.pos().len() == 1 {
+      return nums.pos().map(str).join(".")
+    } else {
+      return [#nums.pos().map(str).join(".") #h(0.5em)]
+    }
   })
   show heading.where(level: 1): it => {
     pagebreak()
@@ -643,7 +654,7 @@
     set block(spacing: 1.5em)
     let pre_chapt = if it.numbering != none {
       text()[
-        #v(50pt)
+        #v(30pt)
         第
         #numbering(it.numbering, ..counter(heading).at(it.location()))
         章
@@ -652,7 +663,7 @@
     text()[
       #pre_chapt \
       #it.body \
-      #v(30pt)
+      #v(25pt)
     ]
   }
   show heading.where(level: 2): it => {
@@ -664,10 +675,9 @@
       weight: "medium",
       size: 16pt
     )
-    set block(above: 1.5em, below: 1.5em)
+    set block(above: 2em, below: 1.5em)
     text()[
       #it
-      #v(5pt)
     ]
   }
   show heading.where(level: 3): it => {
@@ -677,17 +687,23 @@
         "UDEV Gothic"
       ),
       weight: "medium",
-      size: 16pt
+      size: 14pt
     )
     text()[
       #it
-      #v(5pt)
     ]
   }
 
   show heading: it => {
-    set text(weight: "bold", size: 14pt)
-    set block(above: 1.5em, below: 1.5em)
+    set text(
+      font: (
+        "Times New Roman",
+        "UDEV Gothic"
+      ),
+      weight: "bold",
+      size: 14pt
+    )
+    set block(above: 2.5em, below: 1.5em)
     it
   } + empty_par()
 
@@ -699,14 +715,53 @@
   // pagebreak()
   // toc_tbl()
 
+  // Start main pages.
   set page(
-    footer: [
-      #align(center)[#counter(page).display("1")]
-    ]
+    // ref: https://stackoverflow.com/questions/76363935/typst-header-that-changes-from-page-to-page-based-on-state
+    header: locate(loc => [
+      #let i = counter(page).at(loc).first()
+      #let ht-first = state("page-first-section", [])
+      #let ht-last = state("page-last-section", [])
+      
+      // find first heading of level 1 on current page
+      #let first-heading = query(heading.where(level: 1), loc).find(h => h.location().page() == loc.page())
+      
+      // find last heading of level 1 on current page
+      #let last-heading = query(heading.where(level: 1), loc).rev().find(h => h.location().page() == loc.page())
+
+      // test if the find function returned none (i.e. no headings on this page)
+      #{
+        if not first-heading == none {
+          ht-first.update([
+            // change style here if update needed section per section
+            第#counter(heading).at(first-heading.location()).at(0)章
+            #h(10pt)
+            #first-heading.body
+          ])
+          ht-last.update([
+            // change style here if update needed section per section
+            第#counter(heading).at(last-heading.location()).at(0)章
+            #h(10pt)
+            #last-heading.body
+          ])
+          // if one or more headings on the page, use first heading
+          // change style here if update needed page per page
+          [#ht-first.display() #h(1fr)]
+        } else {
+          // no headings on the page, use last heading from variable
+          // change style here if update needed page per page
+          [#ht-last.display() #h(1fr)]
+        }
+      }
+      #v(3pt, weak: true)
+      #line(length: 100%, stroke: 0.5pt + black)
+    ]),
+
+    footer: align(center)[#counter(page).display("1")]
   )
 
   counter(page).update(1)
- 
+
   set math.equation(supplement: [式], numbering: equation_num)
 
   body
