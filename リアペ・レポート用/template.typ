@@ -39,7 +39,7 @@
 
   show heading.where(level: 2): it => block({
     set text(
-      weight: "medium",
+      weight: "semibold",
       size: 17pt
     )
     text()[
@@ -66,7 +66,7 @@
     it
   } + empty_par()
 
-  set page(numbering: "1")
+  set page(numbering: "1 / 1")
 
   body
 
