@@ -12,8 +12,8 @@ jobs:
         uses: lvignoli/typst-action@main
         with:
           source_file: |
-            "卒論・修論用/main.typ"
-            "リアペ・レポート用/main.typ"
+            卒論・修論用/main.typ
+            リアペ・レポート用/main.typ
 
       - name: Upload PDF file
         uses: actions/upload-artifact@v3
