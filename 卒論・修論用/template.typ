@@ -1,6 +1,14 @@
 // https://github.com/ut-khanlab/master_thesis_template_for_typst
 
-#set text(lang: "ja")
+
+// Set font sizes
+#let font_sizes = (
+  h1: 18pt,
+  h2: 16pt,
+  h3: 14pt,
+  under_h4: 12pt,
+  normal: 11pt
+)
 
 // Store theorem environment numbering
 #let thmcounters = state("thm",
@@ -216,25 +224,52 @@
   if abstract_ja != [] {
     show <_ja_abstract_>: {
       align(center)[
-        #text(size: 20pt, "概要")
+        #text(
+          font: (
+            "Times New Roman",
+            "IPAPGothic"
+          ),
+          size: 20pt,
+          weight: "bold",
+          "概要"
+        )
       ]
     }
     [= 概要 <_ja_abstract_>]
 
-    v(30pt)
+    v(20pt)
+
     set text(size: 12pt)
     h(1em)
     abstract_ja
-    par(first-line-indent: 0em)[
-      #text(weight: "bold", size: 12pt)[
-      キーワード:
-      #keywords_ja.join(", ")
+    if keywords_ja != () {
+      par(first-line-indent: 0em)[
+        #text(
+          font: (
+            "Times New Roman",
+            "Source Han Serif JP"
+          ),
+          weight: "bold",
+          size: 12pt
+        )[
+          キーワード:
+          #keywords_ja.join(", ")
+        ]
       ]
-    ]
-  } else {
+    }
+    // pagebreak()
+  }
+
+  if abstract_en != []{
     show <_en_abstract_>: {
       align(center)[
-        #text(size: 18pt, "Abstruct")
+        #text(
+          font: (
+            "Times New Roman"
+          ),
+          size: 18pt,
+          "Abstruct"
+        )
       ]
     }
     [= Abstract <_en_abstract_>]
@@ -243,11 +278,18 @@
     h(1em)
     abstract_en
     par(first-line-indent: 0em)[
-      #text(weight: "bold", size: 12pt)[
+      #text(
+        font: (
+          "Times New Roman"
+        ),
+        weight: "bold",
+        size: 12pt
+      )[
         Key Words: 
         #keywords_en.join("; ")
       ]
     ]
+    // pagebreak()
   }
 }
 
@@ -266,23 +308,23 @@
 
 // Definition of chapter outline
 #let toc() = {
-  align(left)[
+  align(center)[
     #text(
       font: (
         "Times New Roman",
-        "UDEV Gothic"
+        "IPAPGothic"
       ),
       size: 20pt,
-      weight: "medium"
+      weight: "bold"
     )[
-      #v(30pt)
+      #v(20pt)
       目次
-      #v(30pt)
+      #v(20pt)
     ]
   ]
 
   set text(size: 12pt)
-  set par(leading: 1.24em, first-line-indent: 0pt)
+  set par(leading: 1em, first-line-indent: 0pt)
   locate(loc => {
     let elements = query(heading.where(outlined: true), loc)
     for el in elements {
@@ -305,10 +347,14 @@
               "Times New Roman",
               "UDEV Gothic"
             ),
-            weight: "regular"
+            weight: "bold"
           )
           if chapt_num == none {} else {
             set text(
+              font: (
+                "Times New Roman",
+                "UDEV Gothic"
+              ),
               weight: "bold"
             )
             chapt_num
@@ -336,7 +382,7 @@
             ),
             weight: "regular"
           )
-          h(5em)
+          h(4em)
           chapt_num
           let rebody = to-string(el.body)
           rebody
@@ -415,6 +461,121 @@
 #let empty_par() = {
   v(-1em)
   box()
+}
+
+// Setting header
+// ref: https://stackoverflow.com/questions/76363935/typst-header-that-changes-from-page-to-page-based-on-state
+#let header() = locate(loc => [
+  #let i = counter(page).at(loc).first()
+  #let ht-first = state("page-first-section", [])
+  #let ht-last = state("page-last-section", [])
+      
+  // find first heading of level 1 on current page
+  #let first-heading = query(heading.where(level: 1), loc).find(h => h.location().page() == loc.page())
+      
+  // find last heading of level 1 on current page
+  #let last-heading = query(heading.where(level: 1), loc).rev().find(h => h.location().page() == loc.page())
+
+  // don't show chapter numbering in header of bibliography page
+  #let header-chapt-num(content) = {
+    let bibliography-content = query(bibliography, loc).at(0)
+
+    if not content.at("body") == bibliography-content.at("title") {
+      return [
+        #numbering(content.numbering, ..counter(heading).at(content.location()))
+        #h(10pt)
+      ]
+    } else {
+      return none
+    }
+  }
+
+  // test if the find function returned none (i.e. no headings on this page)
+  #{
+    if first-heading != none {
+      ht-first.update([
+        // change style here if update needed section per section
+        #header-chapt-num(first-heading)
+        #first-heading.body
+      ])
+      ht-last.update([
+        // change style here if update needed section per section
+        #header-chapt-num(last-heading)
+        #last-heading.body
+      ])
+      // if one or more headings on the page, use first heading
+      // change style here if update needed page per page
+      [#ht-first.display() #h(1fr)]
+    } else {
+      // no headings on the page, use last heading from variable
+      // change style here if update needed page per page
+      [#ht-last.display() #h(1fr)]
+    }
+  }
+  #v(3pt, weak: true)
+  #line(length: 100%, stroke: 0.5pt + black)
+])
+
+#let appendix(body) = {
+  counter(heading).update(0)
+  counter("appendix").update(1)
+
+  set heading(numbering: (..nums) => {
+    let vals = nums.pos()
+    let value = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".at(vals.at(0) - 1)
+    if vals.len() == 1 {
+      return [付録 #value #h(0.5em)]
+    } else {
+      return [#(value + "." + nums.pos().slice(1).map(str).join(".")) #h(0.5em)]
+    }
+  });
+
+  set page(
+    header: header()
+  )
+
+  let before_h1(it) = if it.numbering != none {
+    text()[
+      #v(10pt)
+      #numbering(it.numbering, ..counter(heading).at(it.location()))
+    ]
+  } else {
+    none
+  }
+
+  show heading.where(level: 1): it => {
+    pagebreak()
+    counter(math.equation).update(0)
+    set text(
+      font: (
+        "Times New Roman",
+        "UDEV Gothic"
+      ),
+      weight: "medium",
+      size: font_sizes.at("h1")
+    )
+    set block(spacing: 1.5em)
+    text()[
+      #before_h1(it) #it.body \
+      #v(12pt)
+    ]
+  }
+
+  show heading.where(level: 2): it => block({
+    set text(
+      font: (
+        "Times New Roman",
+        "UDEV Gothic"
+      ),
+      weight: "medium",
+      size: font_sizes.at("h2")
+    )
+    text()[
+      #it
+    ]
+  })
+
+  [#body]
 }
 
 // Construction of paper
@@ -550,7 +711,7 @@
       "Times New Roman",
       "Source Han Serif JP"
     ),
-    size: 12pt
+    size: font_sizes.at("normal")
   )
   show strong: set text(
     font: (
@@ -558,6 +719,13 @@
       "IPAPGothic"
     )
   )
+
+  // Set font size in footnote
+  show footnote.entry: set text(10pt)
+  show footnote: set text(15pt)
+
+  set list(indent: 7pt)
+  set enum(indent: 7pt)
 
   // Configure the page properties.
   set page(
@@ -574,7 +742,7 @@
       font: (
         "Times New Roman",
         "Source Han Serif JP"
-      )
+      ) 
     )
 
     #v(80pt)
@@ -592,7 +760,8 @@
     #v(40pt)
     #text(
       size: 22pt,
-      font: "UDEV Gothic"
+      font: "UDEV Gothic NF",
+      weight: "bold"
     )[
       #title
     ]
@@ -625,21 +794,32 @@
 
   counter(page).update(1)
   // Show abstruct
-  // abstract_page(abstract_ja, abstract_en, keywords_ja: keywords_ja, keywords_en: keywords_en)
-  // pagebreak()
+  abstract_page(abstract_ja, abstract_en, keywords_ja: keywords_ja, keywords_en: keywords_en)
 
   // Configure paragraph properties.
   set par(leading: 0.8em, first-line-indent: 20pt, justify: true)
-  show par: set block(spacing: 0.8em)
+  show par: set block(spacing: 1.2em)
 
    // Configure chapter headings.
   set heading(numbering: (..nums) => {
     if nums.pos().len() == 1 {
-      return nums.pos().map(str).join(".")
+      return [第 #nums.pos().map(str).join(".") 章]
     } else {
       return [#nums.pos().map(str).join(".") #h(0.5em)]
     }
   })
+
+  let before_h1(it) = if it.numbering != none {
+    text()[
+      #v(10pt)
+      #numbering(it.numbering, ..counter(heading).at(it.location()))
+    ]
+  } else {
+    text()[
+      #v(10pt)
+    ]
+  }
+
   show heading.where(level: 1): it => {
     pagebreak()
     counter(math.equation).update(0)
@@ -649,50 +829,41 @@
         "UDEV Gothic"
       ),
       weight: "medium",
-      size: 20pt
+      size: font_sizes.at("h1")
     )
     set block(spacing: 1.5em)
-    let pre_chapt = if it.numbering != none {
-      text()[
-        #v(30pt)
-        第
-        #numbering(it.numbering, ..counter(heading).at(it.location()))
-        章
-      ] 
-    } else {none}
     text()[
-      #pre_chapt \
-      #it.body \
-      #v(25pt)
+      #before_h1(it) #h(0.5em) #it.body
     ]
   }
-  show heading.where(level: 2): it => {
+
+  show heading.where(level: 2): it => block({
     set text(
       font: (
         "Times New Roman",
         "UDEV Gothic"
       ),
       weight: "medium",
-      size: 16pt
+      size: font_sizes.at("h2")
     )
-    set block(above: 2em, below: 1.5em)
     text()[
       #it
     ]
-  }
-  show heading.where(level: 3): it => {
+  })
+
+  show heading.where(level: 3): it => block({
     set text(
       font: (
         "Times New Roman",
         "UDEV Gothic"
       ),
       weight: "medium",
-      size: 14pt
+      size: font_sizes.at("h3")
     )
     text()[
       #it
     ]
-  }
+  })
 
   show heading: it => {
     set text(
@@ -701,11 +872,11 @@
         "UDEV Gothic"
       ),
       weight: "bold",
-      size: 14pt
+      size: font_sizes.at("under_h4")
     )
-    set block(above: 2.5em, below: 1.5em)
+    set block(above: 2em, below: 1.5em)
     it
-  } + empty_par()
+  } + empty_par() // 最初の段落のインデントを下げるためにダミーの段落を設置する
 
 
   // Start with a chapter outline.
@@ -717,46 +888,7 @@
 
   // Start main pages.
   set page(
-    // ref: https://stackoverflow.com/questions/76363935/typst-header-that-changes-from-page-to-page-based-on-state
-    header: locate(loc => [
-      #let i = counter(page).at(loc).first()
-      #let ht-first = state("page-first-section", [])
-      #let ht-last = state("page-last-section", [])
-      
-      // find first heading of level 1 on current page
-      #let first-heading = query(heading.where(level: 1), loc).find(h => h.location().page() == loc.page())
-      
-      // find last heading of level 1 on current page
-      #let last-heading = query(heading.where(level: 1), loc).rev().find(h => h.location().page() == loc.page())
-
-      // test if the find function returned none (i.e. no headings on this page)
-      #{
-        if not first-heading == none {
-          ht-first.update([
-            // change style here if update needed section per section
-            第#counter(heading).at(first-heading.location()).at(0)章
-            #h(10pt)
-            #first-heading.body
-          ])
-          ht-last.update([
-            // change style here if update needed section per section
-            第#counter(heading).at(last-heading.location()).at(0)章
-            #h(10pt)
-            #last-heading.body
-          ])
-          // if one or more headings on the page, use first heading
-          // change style here if update needed page per page
-          [#ht-first.display() #h(1fr)]
-        } else {
-          // no headings on the page, use last heading from variable
-          // change style here if update needed page per page
-          [#ht-last.display() #h(1fr)]
-        }
-      }
-      #v(3pt, weak: true)
-      #line(length: 100%, stroke: 0.5pt + black)
-    ]),
-
+    header: header(),
     footer: align(center)[#counter(page).display("1")]
   )
 
@@ -769,7 +901,12 @@
   // Display bibliography.
   if bibliography-file != none {
     show bibliography: set text(12pt)
-    bibliography(bibliography-file, title: "参考文献", style: "ieee")
+    bibliography(
+      bibliography-file,
+      title: "参考文献",
+      style: "ieee",
+      full: true
+    )
   }
 }
 
