@@ -1,5 +1,7 @@
 # 日本語文書向け Typst テンプレート（大学生向け&自己流）
 
+[![Build Typst document](https://github.com/stepney141/my_typst_template/actions/workflows/build.yaml/badge.svg)](https://github.com/stepney141/my_typst_template/actions/workflows/build.yaml)
+
 ## これは何？
 
 stepney141 が自分の好みに沿って書いた、日本語文書のための[Typst](https://github.com/typst/typst)のテンプレートです。
