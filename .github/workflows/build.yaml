@@ -21,13 +21,12 @@ jobs:
           name: PDF
           path: "*.pdf"
 
-      - name: Get current date
-        id: date
-        run: echo "DATE=$(date +%Y-%m-%d-%H:%M)" >> $GITHUB_ENV
+      - name: Date
+        env:
+          TZ: "Asia/Tokyo"
+        run: echo "CURRENT_DATETIME=$(date --iso-8601=minutes)" >> $GITHUB_ENV
 
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        if: github.ref_type == 'tag'
+      - name: Git Auto Commit
+        uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          name: "${{ github.ref_name }} — ${{ env.DATE }}"
-          files: "*.pdf"
+          commit_message: "auto-updated: ${{ env.CURRENT_DATETIME }}"
