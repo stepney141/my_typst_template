@@ -24,6 +24,9 @@
   set par(leading: 0.8em, first-line-indent: 20pt, justify: true)
   show par: set block(spacing: 1.4em)
 
+  show link: underline
+  show link: set text(fill: rgb("#125ee0"))
+
   show heading.where(level: 1): it => {
     set text(
       weight: "bold",
