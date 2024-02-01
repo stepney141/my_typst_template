@@ -22,12 +22,13 @@ jobs:
           cd -
           mv $GITHUB_WORKSPACE/downloads/typst-x86_64-unknown-linux-musl/typst .
 
-      - name: Install Japanese fonts (UDEVGothic)
+      - name: Install Japanese fonts (zip)
         run: |
-          wget -P $GITHUB_WORKSPACE/downloads "https://github.com/yuru7/udev-gothic/releases/download/v1.3.1/UDEVGothic_v1.3.1.zip" 
-          unzip $GITHUB_WORKSPACE/downloads/UDEVGothic_v1.3.1.zip -d $GITHUB_WORKSPACE/fonts/UDEVGothic
-          wget -P $GITHUB_WORKSPACE/downloads "https://github.com/adobe-fonts/source-han-serif/releases/download/2.002R/07_SourceHanSerifJ.zip"
-          unzip $GITHUB_WORKSPACE/downloads/07_SourceHanSerifJ.zip -d $GITHUB_WORKSPACE/fonts/SourceHanSerifJP
+          cd $GITHUB_WORKSPACE/downloads
+          wget "https://github.com/yuru7/udev-gothic/releases/download/v1.3.1/UDEVGothic_v1.3.1.zip" 
+          unzip UDEVGothic_v1.3.1.zip -d ./fonts/UDEVGothic
+          wget "https://github.com/adobe-fonts/source-han-serif/releases/download/2.002R/07_SourceHanSerifJ.zip"
+          unzip 07_SourceHanSerifJ.zip -d ./fonts/SourceHanSerifJP
 
       - name: Typst
         run: |
