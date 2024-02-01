@@ -19,7 +19,6 @@ jobs:
           unzip ./07_SourceHanSerifJ.zip
           sudo cp OTF/Japanese/*.otf /usr/share/fonts/opentype/
           fc-cache -fvr
-          typst fonts
 
       - name: Typst
         uses: lvignoli/typst-action@main
