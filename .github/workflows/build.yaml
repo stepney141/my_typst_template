@@ -16,8 +16,10 @@ jobs:
       - name: Install Japanese fonts (apt), Typst and other depdnencies
         run: |
           sudo apt-get update && sudo apt-get install -y fonts-noto fonts-ipafont wget unzip xz-utils
-          wget -P $GITHUB_WORKSPACE/downloads "https://github.com/typst/typst/releases/download/v0.8.0/typst-x86_64-unknown-linux-musl.tar.xz"
-          xz -dc $GITHUB_WORKSPACE/downloads/typst-x86_64-unknown-linux-musl.tar.xz | tar xfv -
+          cd $GITHUB_WORKSPACE/downloads
+          wget "https://github.com/typst/typst/releases/download/v0.8.0/typst-x86_64-unknown-linux-musl.tar.xz"
+          xz -dc typst-x86_64-unknown-linux-musl.tar.xz | tar xfv -
+          cd -
           mv $GITHUB_WORKSPACE/downloads/typst-x86_64-unknown-linux-musl/typst .
 
       - name: Install Japanese fonts (UDEVGothic)
