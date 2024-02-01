@@ -32,9 +32,9 @@ jobs:
 
       - name: Typst
         run: |
-          typst fonts --font-path $GITHUB_WORKSPACE/downloads/fonts
-          typst compile --font-path $GITHUB_WORKSPACE/downloads/fonts 卒論・修論用/main.typ
-          typst compile --font-path $GITHUB_WORKSPACE/downloads/fonts リアペ・レポート用/main.typ
+          ./typst fonts --font-path $GITHUB_WORKSPACE/downloads/fonts
+          ./typst compile --font-path $GITHUB_WORKSPACE/downloads/fonts 卒論・修論用/main.typ
+          ./typst compile --font-path $GITHUB_WORKSPACE/downloads/fonts リアペ・レポート用/main.typ
 
       - name: Upload PDF file
         uses: actions/upload-artifact@v3
