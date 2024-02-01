@@ -465,7 +465,7 @@
 
 // Setting header
 // ref: https://stackoverflow.com/questions/76363935/typst-header-that-changes-from-page-to-page-based-on-state
-#let header() = locate(loc => [
+#let custom_header() = locate(loc => [
   #let i = counter(page).at(loc).first()
   #let ht-first = state("page-first-section", [])
   #let ht-last = state("page-last-section", [])
@@ -531,7 +531,7 @@
   });
 
   set page(
-    header: header()
+    header: custom_header()
   )
 
   let before_h1(it) = if it.numbering != none {
@@ -742,7 +742,7 @@
       font: (
         "Times New Roman",
         "Source Han Serif JP"
-      ) 
+      )
     )
 
     #v(80pt)
@@ -760,7 +760,10 @@
     #v(40pt)
     #text(
       size: 22pt,
-      font: "UDEV Gothic NF",
+      font: (
+        "Times New Roman",
+        "IPAPGothic"
+      ),
       weight: "bold"
     )[
       #title
@@ -888,7 +891,7 @@
 
   // Start main pages.
   set page(
-    header: header(),
+    header: custom_header(),
     footer: align(center)[#counter(page).display("1")]
   )
 
