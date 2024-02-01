@@ -13,7 +13,8 @@ jobs:
           sudo apt-get update && sudo apt-get install -y fonts-noto fonts-ipafont unzip wget
           wget "https://github.com/yuru7/udev-gothic/releases/download/v1.3.1/UDEVGothic_v1.3.1.zip" 
           unzip ./UDEVGothic_v1.3.1.zip
-          sudo cp UDEVGothic_v1.3.1/*.ttf /usr/share/fonts/opentype/udev-gothic/
+          sudo mkdir -p /usr/share/fonts/truetype/UDEVGothic
+          sudo cp UDEVGothic_v1.3.1/*.ttf /usr/share/fonts/truetype/UDEVGothic/
           fc-cache -fv
 
       - name: Typst
