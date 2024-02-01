@@ -8,16 +8,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Install Japanese fonts
+      - name: Install Japanese fonts (apt)
         run: |
           mkdir ./downloads && cd ./downloads
           sudo apt-get update && sudo apt-get install -y fonts-noto fonts-ipafont unzip wget
+
+      - name: Install Japanese fonts (UDEVGothic)
+        run: |
           wget "https://github.com/yuru7/udev-gothic/releases/download/v1.3.1/UDEVGothic_v1.3.1.zip" 
           unzip ./UDEVGothic_v1.3.1.zip
-          sudo cp UDEVGothic_v1.3.1/*.ttf /usr/share/fonts/truetype/
+          mkdir -p /usr/share/fonts/truetype/UDEVGothic
+          sudo cp UDEVGothic_v1.3.1/*.ttf /usr/share/fonts/truetype/UDEVGothic/
+          sudo chown -R root:root /usr/share/fonts/truetype/UDEVGothic
+          fc-cache -fvr
+
+      - name: Install Japanese fonts (Source Han Serif JP)
+        run: |
           wget "https://github.com/adobe-fonts/source-han-serif/releases/download/2.002R/07_SourceHanSerifJ.zip"
           unzip ./07_SourceHanSerifJ.zip
-          sudo cp OTF/Japanese/*.otf /usr/share/fonts/opentype/
+          mkdir -p /usr/share/fonts/opentype/SourceHanSerifJP
+          sudo cp OTF/Japanese/*.otf /usr/share/fonts/opentype/SourceHanSerifJP/
+          sudo chown -R root:root /usr/share/fonts/opentype/SourceHanSerifJP
           fc-cache -fvr
 
       - name: Typst
