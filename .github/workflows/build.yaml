@@ -18,7 +18,7 @@ jobs:
           cd ./downloads
           wget "https://github.com/yuru7/udev-gothic/releases/download/v1.3.1/UDEVGothic_v1.3.1.zip" 
           unzip ./UDEVGothic_v1.3.1.zip
-          mkdir -p /usr/share/fonts/truetype/UDEVGothic
+          sudo mkdir -p /usr/share/fonts/truetype/UDEVGothic
           sudo cp UDEVGothic_v1.3.1/*.ttf /usr/share/fonts/truetype/UDEVGothic/
           fc-cache -fvr
 
@@ -27,7 +27,7 @@ jobs:
           cd ./downloads
           wget "https://github.com/adobe-fonts/source-han-serif/releases/download/2.002R/07_SourceHanSerifJ.zip"
           unzip ./07_SourceHanSerifJ.zip
-          mkdir -p /usr/share/fonts/opentype/SourceHanSerifJP
+          sudo mkdir -p /usr/share/fonts/opentype/SourceHanSerifJP
           sudo cp OTF/Japanese/*.otf /usr/share/fonts/opentype/SourceHanSerifJP/
           fc-cache -fvr
 
