@@ -8,6 +8,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Install Japanese fonts
+        run: |
+          sudo apt-get update && sudo apt-get install -y fonts-noto fonts-ipafont unzip wget
+          wget "https://github.com/yuru7/udev-gothic/releases/download/v1.3.1/UDEVGothic_v1.3.1.zip" 
+          unzip ./UDEVGothic_v1.3.1.zip
+          sudo cp UDEVGothic_v1.3.1/*.ttf /usr/share/fonts/opentype/udev-gothic
+          fc-cache -fv
+
       - name: Typst
         uses: lvignoli/typst-action@main
         with:
