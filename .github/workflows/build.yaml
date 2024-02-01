@@ -8,35 +8,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Install Japanese fonts (apt)
+      - name: Create directory
         run: |
-          mkdir ./downloads && cd ./downloads
-          sudo apt-get update && sudo apt-get install -y fonts-noto fonts-ipafont unzip wget
+          mkdir -p $GITHUB_WORKSPACE/downloads/fonts
+          mkdir -p $GITHUB_WORKSPACE/downloads/typst
+
+      - name: Install Japanese fonts (apt), Typst and other depdnencies
+        run: |
+          sudo apt-get update && sudo apt-get install -y fonts-noto fonts-ipafont wget unzip xz-utils
+          wget -P $GITHUB_WORKSPACE/downloads "https://github.com/typst/typst/releases/download/v0.8.0/typst-x86_64-unknown-linux-musl.tar.xz"
+          xz -dc $GITHUB_WORKSPACE/downloads/typst-x86_64-unknown-linux-musl.tar.xz | tar xfv -
+          mv $GITHUB_WORKSPACE/downloads/typst-x86_64-unknown-linux-musl/typst .
 
       - name: Install Japanese fonts (UDEVGothic)
         run: |
-          cd ./downloads
-          wget "https://github.com/yuru7/udev-gothic/releases/download/v1.3.1/UDEVGothic_v1.3.1.zip" 
-          unzip ./UDEVGothic_v1.3.1.zip
-          sudo mkdir -p /usr/share/fonts/truetype/UDEVGothic
-          sudo cp UDEVGothic_v1.3.1/*.ttf /usr/share/fonts/truetype/UDEVGothic/
-          fc-cache -fvr
-
-      - name: Install Japanese fonts (Source Han Serif JP)
-        run: |
-          cd ./downloads
-          wget "https://github.com/adobe-fonts/source-han-serif/releases/download/2.002R/07_SourceHanSerifJ.zip"
-          unzip ./07_SourceHanSerifJ.zip
-          sudo mkdir -p /usr/share/fonts/opentype/SourceHanSerifJP
-          sudo cp OTF/Japanese/*.otf /usr/share/fonts/opentype/SourceHanSerifJP/
-          fc-cache -fvr
+          wget -P $GITHUB_WORKSPACE/downloads "https://github.com/yuru7/udev-gothic/releases/download/v1.3.1/UDEVGothic_v1.3.1.zip" 
+          unzip $GITHUB_WORKSPACE/downloads/UDEVGothic_v1.3.1.zip -d $GITHUB_WORKSPACE/fonts/UDEVGothic
+          wget -P $GITHUB_WORKSPACE/downloads "https://github.com/adobe-fonts/source-han-serif/releases/download/2.002R/07_SourceHanSerifJ.zip"
+          unzip $GITHUB_WORKSPACE/downloads/07_SourceHanSerifJ.zip -d $GITHUB_WORKSPACE/fonts/SourceHanSerifJP
 
       - name: Typst
-        uses: lvignoli/typst-action@main
-        with:
-          source_file: |
-            卒論・修論用/main.typ
-            リアペ・レポート用/main.typ
+        run: |
+          typst fonts --font-path $GITHUB_WORKSPACE/downloads/fonts
+          typst compile --font-path $GITHUB_WORKSPACE/downloads/fonts 卒論・修論用/main.typ
+          typst compile --font-path $GITHUB_WORKSPACE/downloads/fonts リアペ・レポート用/main.typ
 
       - name: Upload PDF file
         uses: actions/upload-artifact@v3
@@ -44,12 +39,10 @@ jobs:
           name: PDF
           path: "*.pdf"
 
-      - name: Date
-        env:
-          TZ: "Asia/Tokyo"
-        run: echo "CURRENT_DATETIME=$(date --iso-8601=minutes)" >> $GITHUB_ENV
+      - name: Clean up
+        run: rm -rf $GITHUB_WORKSPACE/downloads && rm -rf typst
 
       - name: Git Auto Commit
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: "auto-updated: ${{ env.CURRENT_DATETIME }}"
+          commit_message: "[CI] Auto-compiled to PDF"
