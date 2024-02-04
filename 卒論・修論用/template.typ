@@ -1,6 +1,5 @@
 // https://github.com/ut-khanlab/master_thesis_template_for_typst
 
-
 // Set font sizes
 #let font_sizes = (
   h1: 18pt,
@@ -230,18 +229,23 @@
             "IPAPGothic"
           ),
           size: 20pt,
-          weight: "bold",
-          "概要"
-        )
+          weight: "bold"
+        )[
+          概 #h(5pt) 要
+        ]
       ]
     }
+
     [= 概要 <_ja_abstract_>]
 
-    v(20pt)
+    v(10pt)
 
+    // Configure paragraph properties.
     set text(size: 12pt)
-    h(1em)
+    set par(leading: 0.8em, first-line-indent: 20pt, justify: true)
+    show par: set block(spacing: 1.2em)
     abstract_ja
+
     if keywords_ja != () {
       par(first-line-indent: 0em)[
         #text(
@@ -318,8 +322,8 @@
       weight: "bold"
     )[
       #v(20pt)
-      目次
-      #v(20pt)
+      目 #h(5pt) 次
+      #v(10pt)
     ]
   ]
 
@@ -396,17 +400,24 @@
 }
 
 // Definition of image outline
-#let toc_img() = {
-  align(left)[
-    #text(size: 20pt, weight: "bold")[
-      #v(30pt)
-      図目次
-      #v(30pt)
+#let toc_image() = {
+  align(center)[
+    #text(
+      font: (
+        "Times New Roman",
+        "IPAPGothic"
+      ),
+      size: 20pt,
+      weight: "bold"
+    )[
+      #v(20pt)
+      図 #h(5pt) 目 #h(5pt) 次
+      #v(10pt)
     ]
   ]
 
   set text(size: 12pt)
-  set par(leading: 1.24em, first-line-indent: 0pt)
+  set par(leading: 1em, first-line-indent: 0pt)
   locate(loc => {
     let elements = query(figure.where(outlined: true, kind: "image"), loc)
     for el in elements {
@@ -414,30 +425,35 @@
       let num = counter(el.kind + "-chapter" + str(chapt)).at(el.location()).at(0) + 1
       let page_num = counter(page).at(el.location()).first()
       let caption_body = to-string(el.caption.body)
-      str(chapt)
-      "."
-      str(num)
+      [図 #(str(chapt) + "." + str(num))]
       h(1em)
       caption_body
       box(width: 1fr, h(0.5em) + box(width: 1fr, repeat[.]) + h(0.5em))
-      [#page_num]
+      [p. #page_num]
       linebreak()
     }
   })
 }
 
 // Definition of table outline
-#let toc_tbl() = {
-  align(left)[
-    #text(size: 20pt, weight: "bold")[
-      #v(30pt)
-      表目次
-      #v(30pt)
+#let toc_table() = {
+  align(center)[
+    #text(
+      font: (
+        "Times New Roman",
+        "IPAPGothic"
+      ),
+      size: 20pt,
+      weight: "bold"
+    )[
+      #v(20pt)
+      表 #h(5pt) 目 #h(5pt) 次
+      #v(10pt)
     ]
   ]
 
   set text(size: 12pt)
-  set par(leading: 1.24em, first-line-indent: 0pt)
+  set par(leading: 1em, first-line-indent: 0pt)
    locate(loc => {
     let elements = query(figure.where(outlined: true, kind: "table"), loc)
     for el in elements {
@@ -445,13 +461,11 @@
       let num = counter(el.kind + "-chapter" + str(chapt)).at(el.location()).at(0) + 1
       let page_num = counter(page).at(el.location()).first()
       let caption_body = to-string(el.caption.body)
-      str(chapt)
-      "."
-      str(num)
+      [表 #(str(chapt) + "." + str(num))]
       h(1em)
       caption_body
       box(width: 1fr, h(0.5em) + box(width: 1fr, repeat[.]) + h(0.5em))
-      [#page_num]
+      [p. #page_num]
       linebreak()
     }
   })
@@ -524,7 +538,7 @@
     let vals = nums.pos()
     let value = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".at(vals.at(0) - 1)
     if vals.len() == 1 {
-      return [付録 #value #h(0.5em)]
+      return [付録 #value]
     } else {
       return [#(value + "." + nums.pos().slice(1).map(str).join(".")) #h(0.5em)]
     }
@@ -556,8 +570,7 @@
     )
     set block(spacing: 1.5em)
     text()[
-      #before_h1(it) #it.body \
-      #v(12pt)
+      #before_h1(it) #h(0.5em) #it.body #v(0pt)
     ]
   }
 
@@ -611,9 +624,47 @@
   // works.
   bibliography-file: none,
 
+  enable_toc_of_image: true,
+  enable_toc_of_table: true,
+
   // The paper's content.
   body,
 ) = {
+  // Set the document's metadata.
+  set document(title: title, author: author)
+
+  // Set the body font. TeX Gyre Pagella is a free alternative
+  // to Palatino.
+  set text(
+    font: (
+      "Times New Roman",
+      "Source Han Serif JP"
+    ),
+    size: font_sizes.at("normal")
+  )
+  show strong: set text(
+    font: (
+      "Times New Roman",
+      "IPAPGothic"
+    )
+  )
+
+  // Set font size in footnote
+  show footnote.entry: set text(10pt)
+  show footnote: set text(15pt)
+
+  set list(indent: 7pt)
+  set enum(indent: 7pt)
+
+  // Configure the page properties.
+  set page(
+    paper: paper-size,
+    margin: (
+      bottom: 1.75cm, top: 2.5cm,
+      left: 2cm, right: 2cm
+    ),
+  )
+
   // citation number
   show ref: it => {
     if it.element != none and it.element.func() == figure {
@@ -701,39 +752,22 @@
     }
   }
 
-  // Set the document's metadata.
-  set document(title: title, author: author)
-
-  // Set the body font. TeX Gyre Pagella is a free alternative
-  // to Palatino.
-  set text(
-    font: (
-      "Times New Roman",
-      "Source Han Serif JP"
-    ),
-    size: font_sizes.at("normal")
-  )
-  show strong: set text(
-    font: (
-      "Times New Roman",
-      "IPAPGothic"
-    )
+  // Display inline code in a small box
+  // that retains the correct baseline.
+  show raw.where(block: false): box.with(
+    fill: luma(240),
+    inset: (x: 3pt, y: 0pt),
+    outset: (y: 3pt),
+    radius: 2pt
   )
 
-  // Set font size in footnote
-  show footnote.entry: set text(10pt)
-  show footnote: set text(15pt)
-
-  set list(indent: 7pt)
-  set enum(indent: 7pt)
-
-  // Configure the page properties.
-  set page(
-    paper: paper-size,
-    margin: (
-      bottom: 1.75cm, top: 2.5cm,
-      left: 2cm, right: 2cm
-    ),
+  // Display block code in a larger block
+  // with more padding.
+  show raw.where(block: true): block.with(
+    fill: luma(240),
+    inset: 10pt,
+    radius: 4pt,
+    width: 100%,
   )
 
   // The first page.
@@ -742,7 +776,7 @@
       font: (
         "Times New Roman",
         "Source Han Serif JP"
-      )
+      ) 
     )
 
     #v(80pt)
@@ -775,17 +809,21 @@
       #id #author
     ]
 
-    // #text(
-    //   size: 16pt,
-    // )[
-    //   指導教員: #mentor #mentor-post
-    // ]
+    #if (mentor != "" or mentor-post != "") {
+      text(
+        size: 16pt,
+      )[
+        指導教員: #mentor #mentor-post
+      ]
+    }
+    
     #v(40pt)
     #text(
       size: 16pt,
     )[
       #date.at(0) 年 #date.at(1) 月 #date.at(2) 日 提出
     ]
+
     #pagebreak()
   ]
 
@@ -796,6 +834,7 @@
   )
 
   counter(page).update(1)
+
   // Show abstruct
   abstract_page(abstract_ja, abstract_en, keywords_ja: keywords_ja, keywords_en: keywords_en)
 
@@ -814,14 +853,10 @@
 
   let before_h1(it) = if it.numbering != none {
     text()[
-      #v(10pt)
       #numbering(it.numbering, ..counter(heading).at(it.location()))
+      #h(1em)
     ]
-  } else {
-    text()[
-      #v(10pt)
-    ]
-  }
+  } 
 
   show heading.where(level: 1): it => {
     pagebreak()
@@ -836,37 +871,42 @@
     )
     set block(spacing: 1.5em)
     text()[
-      #before_h1(it) #h(0.5em) #it.body
+      #v(10pt)
+      #before_h1(it) #it.body
     ]
   }
 
-  show heading.where(level: 2): it => block({
-    set text(
-      font: (
-        "Times New Roman",
-        "UDEV Gothic"
-      ),
-      weight: "medium",
-      size: font_sizes.at("h2")
-    )
-    text()[
-      #it
-    ]
-  })
+  show heading.where(level: 2): it => block(
+    {
+      set text(
+        font: (
+          "Times New Roman",
+          "UDEV Gothic"
+        ),
+        weight: "medium",
+        size: font_sizes.at("h2")
+      )
+      text()[
+        #it
+      ]
+    }
+  )
 
-  show heading.where(level: 3): it => block({
-    set text(
-      font: (
-        "Times New Roman",
-        "UDEV Gothic"
-      ),
-      weight: "medium",
-      size: font_sizes.at("h3")
-    )
-    text()[
-      #it
-    ]
-  })
+  show heading.where(level: 3): it => block(
+    {
+      set text(
+        font: (
+          "Times New Roman",
+          "UDEV Gothic"
+        ),
+        weight: "medium",
+        size: font_sizes.at("h3")
+      )
+      text()[
+        #it
+      ]
+    }
+  )
 
   show heading: it => {
     set text(
@@ -884,10 +924,15 @@
 
   // Start with a chapter outline.
   toc()
-  // pagebreak()
-  // toc_img()
-  // pagebreak()
-  // toc_tbl()
+  if enable_toc_of_image or enable_toc_of_table {
+    pagebreak()
+  }
+  if enable_toc_of_image {
+    toc_image()
+  }
+  if enable_toc_of_table {
+    toc_table()
+  }
 
   // Start main pages.
   set page(

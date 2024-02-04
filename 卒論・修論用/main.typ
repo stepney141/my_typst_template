@@ -18,34 +18,56 @@
 
 = 序論
 
-Typstはmarkdown likeなコーディングでpdf, ポスター, スライド等のドキュメントを作成できます. Rust言語で書かれており, コンパイルが#LATEX に比べて早いのが特長です.
+Typst @madje2022programmable は、Markdownのような分かりやすい記法で、PDF文書・ポスター・スライド等の各種ドキュメントを簡単に作成できます。Rust言語で書かれており、#LATEX に比べてコンパイルが極めて高速なのが特長です.
 
 == Typstは優秀だ
 
-```typ
-こんな感じで @ss8843592 or #cite(<ss8843592>) と引用できます
-```
+=== 簡単に書ける
 
-こんな感じで @ss8843592 or #cite(<ss8843592>) と引用できます
-
-
-=== エレガントに書ける
-
-数式
-```typ
-$ mat(1, 2; 3, 4) $ <eq1>
-```
-と書くと
+```typ $ mat(1, 2; 3, 4) $ <eq1>```
+と書くと、@eq1 を書くことができます。```typ <eq1>```はラベル名で、コンパイルすると数式への文書内リンクに置換されます。
 $ A = mat(1, 2; 3, 4) $ <eq1>
-@eq1 を書くことができます.
+実にシンプルですね。`\begin{pmatrix}` みたいなことを書く必要はなく、Markdown + MathJaxのように `$ $` だけで良いんです。
 
-関数を作れば
+分数やカッコもお手の物。`\frac{a}{b}` なんてややこしい記法は使わず、ただ ```typ $ a / b $``` と書けば分数になります。`\left(` とか `\right)` とかを自分で書かなくても、Typstはカッコの対応関係を自動で検知し、良い感じにサイズを合わせてくれます。
+
+```typ
+$ F_n = 1 / sqrt(5) dot ( ( (1 + sqrt(5)) / 2) ^ n - ((1 - sqrt(5)) / 2) ^ n ) $
+```
+
+$ F_n = 1 / sqrt(5) dot ( ( (1 + sqrt(5)) / 2) ^ n - ((1 - sqrt(5)) / 2) ^ n ) $
+
+```typ $ f(x, y) := cases(
+  1 "if" (x dot y)/2 <= 0,
+  2 "if" x "is even",
+  3 "if" x in NN,
+  4 "else",
+) $```
+
+$ f(x, y) := cases(
+  1 "if" (x dot y)/2 <= 0,
+  2 "if" x "is even",
+  3 "if" x in NN,
+  4 "else",
+) $\
+
+画像や表の挿入も簡単です。次のようにすると @img1 を表示できます。
+
+```typ
 #img(
   image("Figures/typst.svg", width: 20%),
-  caption: [イメージ],
-) <img1>\
-@img1 を表示できますし,
+  caption: [Typstのロゴ],
+) <img1>
+```
 
+#img(
+  image("Figures/typst.svg", width: 20%),
+  caption: [Typstのロゴ],
+) <img1>
+
+@tbl1 はこんな感じ。
+
+```typ
 #tbl(table(
     columns: 4,
     [t], [1], [2], [3],
@@ -53,35 +75,120 @@ $ A = mat(1, 2; 3, 4) $ <eq1>
   ),
   caption: [テーブル @madje2022programmable],
 ) <tbl1>
-@tbl1 も表示できます.
+```
 
-= 先行研究
+#tbl(table(
+    columns: 4,
+    [t], [1], [2], [3],
+    [y], [0.3s], [0.4s], [0.8s],
+  ),
+  caption: [テーブル @madje2022programmable],
+) <tbl1>\
 
-#LATEX はカスタム性の高さ, 歴史的なところからまだまだ廃れないとは思いますが, 卒論や修論や学会の予稿等の作成においてはTypst @madje2022programmable の使いやすさから置き換わるのではないかと思います(半分願望).
+こんな感じで @ss8843592 or #cite(<ss8843592>) と引用できます。引用方式も数十種類の中から選べます。
+
+```typ
+こんな感じで @ss8843592 or #cite(<ss8843592>) と引用できます。
+```
+
+また、文中に簡単なプログラムを直接埋め込むことも可能です（コンパイル時に評価されて計算結果がテキストに変換される）。
+
+他にも ```typ #include path.typ``` とすれば他ファイルを参照できます。テンプレートファイルを作って別のファイルから呼び出したり、長い分量の本などを作成する際に章ごとにファイルを分けることなどができます。
+
+#LATEX は世界中のユーザによる膨大な資産と、長年かけて築いてきた圧倒的なシェアがあるため、すぐにTypstに取って代わることはないでしょう。しかし講義ノート・卒論/修論・学会の予稿等の作成などの場面では、少しずつ Typst に置き換わっていくでしょう（願望）。
 #img(
   image("Figures/typst-github.svg", width: 20%),
   caption: [Typst + git @madje2022programmable],
 ) <img2>
 
-=== #LATEX はコンパイルが遅い
+== グラフィックスも色々できるよ
 
-本資料は, #LATEX でコンパイルの待ち時間中に作りました. 
-他にも
+このように、Typstはデフォルトでも様々なグラフィックス機能を備えていますが、他にも「CetZ」というパッケージがあります（TikZのTypst版のようなもの）。これを使うと、もっと自由度の高い図を色々と描くことができます。
+
 ```typ
-#include path.typ
+#import "@preview/cetz:0.2.0": canvas, draw, vector, matrix
+#canvas({
+  import draw: *
+
+  // Set up the transformation matrix
+  set-transform(matrix.transform-rotate-dir((1, 1, -1.3), (0, 1, .3)))
+  scale(x: 1.5, z: -1)
+
+  grid((0,-2), (8,2), stroke: gray + .5pt)
+
+  // Draw a sine wave on the xy plane
+  let wave(amplitude: 1, fill: none, phases: 2, scale: 8, samples: 100) = {
+    line(..(for x in range(0, samples + 1) {
+      let x = x / samples
+      let p = (2 * phases * calc.pi) * x
+      ((x * scale, calc.sin(p) * amplitude),)
+    }), fill: fill)
+
+    let subdivs = 8
+    for phase in range(0, phases) {
+      let x = phase / phases
+      for div in range(1, subdivs + 1) {
+        let p = 2 * calc.pi * (div / subdivs)
+        let y = calc.sin(p) * amplitude
+        let x = x * scale + div / subdivs * scale / phases
+        line((x, 0), (x, y), stroke: rgb(0, 0, 0, 150) + .5pt)
+      }
+    }
+  }
+
+  group({
+    rotate(x: 90deg)
+    wave(amplitude: 1.6, fill: rgb(0, 0, 255, 50))
+  })
+  wave(amplitude: 1, fill: rgb(255, 0, 0, 50))
+})
 ```
 
-とすれば, 他ファイルを参照できるので, 長い分量の本などを作成する際に, 章ごとにファイルを分けるなどができるようになります.\
-便利なので広まれば良いなと思います. \
-詳しくは#link("https://typst.app/docs")[
-  公式ドキュメント
-]をご覧ください
+#import "@preview/cetz:0.2.0": canvas, draw, vector, matrix
+#img(
+  canvas({
+    import draw: *
 
-= 定義
+    // Set up the transformation matrix
+    set-transform(matrix.transform-rotate-dir((1, 1, -1.3), (0, 1, .3)))
+    scale(x: 1.5, z: -1)
 
-Typstでは関数定義が簡単であるので定理の書き方などをカスタマイズできます.
+    grid((0,-2), (8,2), stroke: gray + .5pt)
 
-== 定義例
+    // Draw a sine wave on the xy plane
+    let wave(amplitude: 1, fill: none, phases: 2, scale: 8, samples: 100) = {
+      line(..(for x in range(0, samples + 1) {
+        let x = x / samples
+        let p = (2 * phases * calc.pi) * x
+        ((x * scale, calc.sin(p) * amplitude),)
+      }), fill: fill)
+
+      let subdivs = 8
+      for phase in range(0, phases) {
+        let x = phase / phases
+        for div in range(1, subdivs + 1) {
+          let p = 2 * calc.pi * (div / subdivs)
+          let y = calc.sin(p) * amplitude
+          let x = x * scale + div / subdivs * scale / phases
+          line((x, 0), (x, y), stroke: rgb(0, 0, 0, 150) + .5pt)
+        }
+      }
+    }
+
+    group({
+      rotate(x: 90deg)
+      wave(amplitude: 1.6, fill: rgb(0, 0, 255, 50))
+    })
+    wave(amplitude: 1, fill: rgb(255, 0, 0, 50))
+  }),
+  caption: [CetZで描いた図の例（公式GitHubリポジトリより引用）]
+)
+
+= 自分でスタイルを定義する
+
+Typstでは定理の書き方などをカスタマイズできます.
+
+== 実例
 
 `thmbox`関数を作ってカスタマイズをできるようにしました.
 ```typ
@@ -91,7 +198,7 @@ Typstでは関数定義が簡単であるので定理の書き方などをカス
   base_level: 1
 )
 
-#theorem("ヲイラ-")[
+#theorem("オイラー")[
   Typst はすごいのである.
 ] <theorem>
 ```
@@ -102,8 +209,8 @@ Typstでは関数定義が簡単であるので定理の書き方などをカス
   base_level: 1
 )
 
-#theorem("ヲイラ-")[
-  Typst はすごいのである.
+#theorem("湯川")[
+  セガなんてダッセーよな！
 ] <theorem>
 
 ```typ
@@ -114,7 +221,7 @@ Typstでは関数定義が簡単であるので定理の書き方などをカス
 )
 
 #lemma[
-  Texはさようならである.
+  帰ってTypstやろーぜー！
 ] <lemma>
 ```
 #let lemma = thmbox(
@@ -124,13 +231,14 @@ Typstでは関数定義が簡単であるので定理の書き方などをカス
 )
 
 #lemma[
-  Texはさようならである.
+  帰ってTypstやろーぜー！
 ] <lemma>
 
-このように, @theorem , @lemma を定義できます .\
-カッコ内の引数に人名などを入れることができます.
-また, identifierを変えれば, カウントはリセットされる.
+このように, @theorem , @lemma を定義できます.
+
+カッコ内の引数に人名などを入れることができます.また, identifierを変えれば, カウントはリセットされます。
 identifier毎にカウントを柔軟に変えられるようにしてあるので, 様々な論文の形式に対応できるはずです.
+
 ```typ
 #let definition = thmbox(
   "definition", //identifier
@@ -155,7 +263,7 @@ identifier毎にカウントを柔軟に変えられるようにしてあるの�
   Typst is a new markup-based typesetting system for the sciences. 
 ] <definition>
 
-@definition のようにカウントがリセットされています.
+このように、「@definition」のカウントは「2.1」にリセットされていますね。
 
 ```typ
 #let corollary = thmbox(
@@ -202,3 +310,17 @@ baseにidentifierを入れることで@corollary のようにサブカウント�
 ] <example>
 
 thmplain関数を使ってplain表現も可能です.
+
+#appendix[
+  = こういう機能もいるよね
+  
+  コンテンツの周囲を `#appendix[]` で囲むと、そのコンテンツはそのまま付録セクションになります。ナンバリング方式もアルファベットに変わります。
+
+  ```typ
+  #appendix[
+    = こういう機能もいるよね
+
+    コンテンツの周囲を `#appendix[]` で囲むと、そのコンテンツはそのまま付録セクションになります。ナンバリング方式もアルファベットに変えてありますよ！
+  ]
+  ```
+]
