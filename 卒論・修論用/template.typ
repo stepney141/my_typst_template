@@ -6,7 +6,8 @@
   h2: 16pt,
   h3: 14pt,
   under_h4: 12pt,
-  normal: 11pt
+  normal: 11pt,
+  math: 12pt
 )
 
 // Store theorem environment numbering
@@ -649,9 +650,11 @@
     )
   )
 
-  // Set font size in footnote
+  // Set font size
   show footnote.entry: set text(10pt)
   show footnote: set text(15pt)
+  show math.equation: set text(font_sizes.at("math"))
+
 
   set list(indent: 7pt)
   set enum(indent: 7pt)
@@ -952,8 +955,7 @@
     bibliography(
       bibliography-file,
       title: "参考文献",
-      style: "ieee",
-      full: true
+      style: "ieee"
     )
   }
 }
