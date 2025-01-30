@@ -18,11 +18,6 @@ jobs:
           echo ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true | sudo debconf-set-selections
           sudo apt-get update && sudo apt-get install -y fonts-noto fonts-ipafont ttf-mscorefonts-installer wget unzip xz-utils
           fc-cache -fv
-          cd $GITHUB_WORKSPACE/downloads
-          wget "https://github.com/typst/typst/releases/download/v0.10.0/typst-x86_64-unknown-linux-musl.tar.xz"
-          xz -dc typst-x86_64-unknown-linux-musl.tar.xz | tar xfv -
-          cd -
-          mv $GITHUB_WORKSPACE/downloads/typst-x86_64-unknown-linux-musl/typst .
 
       - name: Install Japanese fonts (zip)
         run: |
@@ -32,11 +27,11 @@ jobs:
           wget "https://github.com/adobe-fonts/source-han-serif/releases/download/2.002R/12_SourceHanSerifJP.zip"
           unzip 12_SourceHanSerifJP.zip -d ./fonts/SourceHanSerifJP
 
-      - name: Typst
-        run: |
-          ./typst fonts --font-path $GITHUB_WORKSPACE/downloads/fonts
-          ./typst compile --font-path $GITHUB_WORKSPACE/downloads/fonts 卒論・修論用/main.typ
-          ./typst compile --font-path $GITHUB_WORKSPACE/downloads/fonts リアペ・レポート用/main.typ
+      - name: Typst (卒論・修論)
+        run: typst compile 卒論・修論用/main.typ --font-path $GITHUB_WORKSPACE/downloads/fonts 
+
+      - name: Typst (リアペ・レポート)
+        run: typst compile リアペ・レポート用/main.typ --font-path $GITHUB_WORKSPACE/downloads/fonts
 
       - name: Upload PDF file
         uses: actions/upload-artifact@v3

@@ -16,7 +16,7 @@
 #let name_box(id: "", name: "") = {
   set align(left)
   set text(
-    size: 14pt,
+    size: 13pt,
   )
   [
     #text(font: fontGothic)[*学籍番号*] : #text(font: (fontLatin, fontMincho))[#id]
