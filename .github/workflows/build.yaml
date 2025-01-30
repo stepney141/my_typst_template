@@ -13,7 +13,7 @@ jobs:
           mkdir -p $GITHUB_WORKSPACE/downloads/fonts
           mkdir -p $GITHUB_WORKSPACE/downloads/typst
 
-      - name: Install Japanese fonts (apt), Typst and other depdnencies
+      - name: Install Japanese fonts (apt) and other depdnencies
         run: |
           echo ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true | sudo debconf-set-selections
           sudo apt-get update && sudo apt-get install -y fonts-noto fonts-ipafont ttf-mscorefonts-installer wget unzip xz-utils
@@ -31,10 +31,10 @@ jobs:
         uses: typst-community/setup-typst@v3
 
       - name: Typst (卒論・修論)
-        run: typst compile 卒論・修論用/main.typ --font-path $GITHUB_WORKSPACE/downloads/fonts 
+        run: typst compile 卒論・修論用/main.typ 卒論・修論用/main.pdf --font-path $GITHUB_WORKSPACE/downloads/fonts 
 
       - name: Typst (リアペ・レポート)
-        run: typst compile リアペ・レポート用/main.typ --font-path $GITHUB_WORKSPACE/downloads/fonts
+        run: typst compile リアペ・レポート用/main.typ リアペ・レポート用/main.pdf --font-path $GITHUB_WORKSPACE/downloads/fonts
 
       - name: Upload PDF file
         uses: actions/upload-artifact@v4
