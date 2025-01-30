@@ -27,6 +27,9 @@ jobs:
           wget "https://github.com/adobe-fonts/source-han-serif/releases/download/2.002R/12_SourceHanSerifJP.zip"
           unzip 12_SourceHanSerifJP.zip -d ./fonts/SourceHanSerifJP
 
+      - name: Install Typst
+        uses: typst-community/setup-typst@v3
+
       - name: Typst (卒論・修論)
         run: typst compile 卒論・修論用/main.typ --font-path $GITHUB_WORKSPACE/downloads/fonts 
 
