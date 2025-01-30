@@ -45,11 +45,12 @@
       number = none
     }
     if number == auto and numbering != none {
-      result = locate(loc => {
+      result = context {
+        let heading-counter = counter(heading).get()
         return thmcounters.update(thmpair => {
           let counters = thmpair.at("counters")
           // Manually update heading counter
-          counters.at("heading") = counter(heading).at(loc)
+          counters.at("heading") = heading-counter
           if not identifier in counters.keys() {
             counters.insert(identifier, (0, ))
           }
@@ -85,11 +86,11 @@
             "latest": latest
           )
         })
-      })
+      }
 
-      number = thmcounters.display(x => {
-        return global_numbering(numbering, ..x.at("latest"))
-      })
+      number = context {
+        global_numbering(numbering, ..thmcounters.get().at("latest"))
+      }
     }
 
     return figure(
@@ -169,32 +170,32 @@
 
 // Counting equation number
 #let equation_num(_) = {
-  locate(loc => {
-    let chapt = counter(heading).at(loc).at(0)
+  context {
+    let chapt = counter(heading).get().at(0)
     let c = counter(math.equation)
-    let n = c.at(loc).at(0)
+    let n = c.get().at(0)
     "(" + str(chapt) + "." + str(n) + ")"
-  })
+  }
 }
 
 // Counting table number
 #let table_num(_) = {
-  locate(loc => {
-    let chapt = counter(heading).at(loc).at(0)
+  context {
+    let chapt = counter(heading).get().at(0)
     let c = counter("table-chapter" + str(chapt))
-    let n = c.at(loc).at(0)
+    let n = c.get().at(0)
     str(chapt) + "." + str(n + 1)
-  })
+  }
 }
 
 // Counting image number
 #let image_num(_) = {
-  locate(loc => {
-    let chapt = counter(heading).at(loc).at(0)
+  context {
+    let chapt = counter(heading).get().at(0)
     let c = counter("image-chapter" + str(chapt))
-    let n = c.at(loc).at(0)
+    let n = c.get().at(0)
     str(chapt) + "." + str(n + 1)
-  })
+  }
 }
 
 // Definition of table format
@@ -244,7 +245,7 @@
     // Configure paragraph properties.
     set text(size: 12pt)
     set par(leading: 0.8em, first-line-indent: 20pt, justify: true)
-    show par: set block(spacing: 1.2em)
+    set par(spacing: 1.2em)
     abstract_ja
 
     if keywords_ja != () {
@@ -330,10 +331,10 @@
 
   set text(size: 12pt)
   set par(leading: 1em, first-line-indent: 0pt)
-  locate(loc => {
-    let elements = query(heading.where(outlined: true), loc)
+  context {
+    let elements = query(heading.where(outlined: true))
     for el in elements {
-      let before_toc = query(heading.where(outlined: true).before(loc), loc).find((one) => {one.body == el.body}) != none
+      let before_toc = query(heading.where(outlined: true).before(here())).find((one) => {one.body == el.body}) != none
       let page_num = if before_toc {
         numbering("i", counter(page).at(el.location()).first())
       } else {
@@ -397,7 +398,7 @@
       [p. #page_num]
       linebreak()
     }
-  })
+  }
 }
 
 // Definition of image outline
@@ -419,12 +420,13 @@
 
   set text(size: 12pt)
   set par(leading: 1em, first-line-indent: 0pt)
-  locate(loc => {
-    let elements = query(figure.where(outlined: true, kind: "image"), loc)
+  context {
+    let elements = query(figure.where(outlined: true, kind: "image"))
     for el in elements {
-      let chapt = counter(heading).at(el.location()).at(0)
-      let num = counter(el.kind + "-chapter" + str(chapt)).at(el.location()).at(0) + 1
-      let page_num = counter(page).at(el.location()).first()
+      let loc = el.location()
+      let chapt = counter(heading).at(loc).at(0)
+      let num = counter(el.kind + "-chapter" + str(chapt)).at(loc).at(0) + 1
+      let page_num = counter(page).at(loc).first()
       let caption_body = to-string(el.caption.body)
       [図 #(str(chapt) + "." + str(num))]
       h(1em)
@@ -433,7 +435,7 @@
       [p. #page_num]
       linebreak()
     }
-  })
+  }
 }
 
 // Definition of table outline
@@ -455,8 +457,8 @@
 
   set text(size: 12pt)
   set par(leading: 1em, first-line-indent: 0pt)
-   locate(loc => {
-    let elements = query(figure.where(outlined: true, kind: "table"), loc)
+   context {
+    let elements = query(figure.where(outlined: true, kind: "table"))
     for el in elements {
       let chapt = counter(heading).at(el.location()).at(0)
       let num = counter(el.kind + "-chapter" + str(chapt)).at(el.location()).at(0) + 1
@@ -469,7 +471,7 @@
       [p. #page_num]
       linebreak()
     }
-  })
+  }
 }
 
 // Setting empty par
@@ -480,20 +482,20 @@
 
 // Setting header
 // ref: https://stackoverflow.com/questions/76363935/typst-header-that-changes-from-page-to-page-based-on-state
-#let custom_header() = locate(loc => [
-  #let i = counter(page).at(loc).first()
+#let custom_header() = context [
+  #let i = counter(page).get().first()
   #let ht-first = state("page-first-section", [])
   #let ht-last = state("page-last-section", [])
       
   // find first heading of level 1 on current page
-  #let first-heading = query(heading.where(level: 1), loc).find(h => h.location().page() == loc.page())
+  #let first-heading = query(heading.where(level: 1)).find(h => h.location().page() == locate(here()).page())
       
   // find last heading of level 1 on current page
-  #let last-heading = query(heading.where(level: 1), loc).rev().find(h => h.location().page() == loc.page())
+  #let last-heading = query(heading.where(level: 1)).rev().find(h => h.location().page() == locate(here()).page())
 
   // don't show chapter numbering in header of bibliography page
   #let header-chapt-num(content) = {
-    let bibliography-content = query(bibliography, loc).at(0)
+    let bibliography-content = query(bibliography).at(0)
 
     if not content.at("body") == bibliography-content.at("title") {
       return [
@@ -520,16 +522,16 @@
       ])
       // if one or more headings on the page, use first heading
       // change style here if update needed page per page
-      [#ht-first.display() #h(1fr)]
+      context [#ht-first.get() #h(1fr)]
     } else {
       // no headings on the page, use last heading from variable
       // change style here if update needed page per page
-      [#ht-last.display() #h(1fr)]
+      context [#ht-last.get() #h(1fr)]
     }
   }
   #v(3pt, weak: true)
   #line(length: 100%, stroke: 0.5pt + black)
-])
+]
 
 #let appendix(body) = {
   counter(heading).update(0)
@@ -684,7 +686,7 @@
           "."
           str(num)
         } else if el.kind == "thmenv" {
-          let thms = query(selector(<meta:thmenvcounter>).after(loc), loc)
+          let thms = query(selector(<meta:thmenvcounter>))
           let number = thmcounters.at(thms.first().location()).at("latest")
           it.element.supplement
           " "
@@ -733,11 +735,11 @@
       it.supplement
       " " + it.counter.display(it.numbering)
       " " + it.caption.body
-      locate(loc => {
-        let chapt = counter(heading).at(loc).at(0)
+      context {
+        let chapt = counter(heading).at(it.location()).at(0)
         let c = counter("image-chapter" + str(chapt))
         c.step()
-      })
+      }
     } else if it.kind == "table" {
       set text(size: 12pt)
       it.supplement
@@ -745,11 +747,11 @@
       " " + it.caption.body
       set text(size: 10.5pt)
       it.body
-      locate(loc => {
-        let chapt = counter(heading).at(loc).at(0)
+      context {
+        let chapt = counter(heading).at(it.location()).at(0)
         let c = counter("table-chapter" + str(chapt))
         c.step()
-      })
+      }
     } else {
       it
     }
@@ -831,9 +833,7 @@
   ]
 
   set page(
-    footer: [
-      #align(center)[#counter(page).display("i")]
-    ]
+    numbering: "i",
   )
 
   counter(page).update(1)
@@ -843,7 +843,7 @@
 
   // Configure paragraph properties.
   set par(leading: 0.8em, first-line-indent: 20pt, justify: true)
-  show par: set block(spacing: 1.2em)
+  set par(spacing: 1.2em)
 
    // Configure chapter headings.
   set heading(numbering: (..nums) => {
@@ -940,7 +940,7 @@
   // Start main pages.
   set page(
     header: custom_header(),
-    footer: align(center)[#counter(page).display("1")]
+    numbering: "1"
   )
 
   counter(page).update(1)
