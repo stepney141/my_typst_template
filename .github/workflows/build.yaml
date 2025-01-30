@@ -34,7 +34,7 @@ jobs:
         run: typst compile リアペ・レポート用/main.typ --font-path $GITHUB_WORKSPACE/downloads/fonts
 
       - name: Upload PDF file
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: PDF
           path: "*.pdf"
