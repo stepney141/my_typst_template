@@ -10,7 +10,7 @@
   mentor-post: "准教授",
   class: "修士",
   abstract_ja: [
-      近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい.
+    近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい.
   ],
   keywords_ja: ("宇宙", "異常検知"),
   bibliography-file: "references.bib",
@@ -35,7 +35,7 @@ $ A = mat(1, 2; 3, 4) $ <eq1>
 $ F_n = 1 / sqrt(5) dot ( ( (1 + sqrt(5)) / 2) ^ n - ((1 - sqrt(5)) / 2) ^ n ) $
 ```
 
-$ F_n = 1 / sqrt(5) dot ( ( (1 + sqrt(5)) / 2) ^ n - ((1 - sqrt(5)) / 2) ^ n ) $
+$ F_n = 1 / sqrt(5) dot ( ( (1 + sqrt(5)) / 2)^n - ((1 - sqrt(5)) / 2)^n ) $
 
 ```typ $ f(x, y) := cases(
   1 "if" (x dot y)/2 <= 0,
@@ -44,12 +44,14 @@ $ F_n = 1 / sqrt(5) dot ( ( (1 + sqrt(5)) / 2) ^ n - ((1 - sqrt(5)) / 2) ^ n ) $
   4 "else",
 ) $```
 
-$ f(x, y) := cases(
-  1 "if" (x dot y)/2 <= 0,
-  2 "if" x "is even",
-  3 "if" x in NN,
-  4 "else",
-) $\
+$
+  f(x, y) := cases(
+    1 "if" (x dot y)/2 <= 0,
+    2 "if" x "is even",
+    3 "if" x in NN,
+    4 "else",
+  )
+$\
 
 画像や表の挿入も簡単です。次のようにすると @img1 を表示できます。
 
@@ -77,7 +79,8 @@ $ f(x, y) := cases(
 ) <tbl1>
 ```
 
-#tbl(table(
+#tbl(
+  table(
     columns: 4,
     [t], [1], [2], [3],
     [y], [0.3s], [0.4s], [0.8s],
@@ -106,54 +109,17 @@ $ f(x, y) := cases(
 このように、Typstはデフォルトでも様々なグラフィックス機能を備えていますが、他にも「CetZ」というパッケージがあります（TikZのTypst版のようなもの）。これを使うと、もっと自由度の高い図を色々と描くことができます。
 
 ```typ
-#import "@preview/cetz:0.2.0": canvas, draw, vector, matrix
+#import "@preview/cetz:0.4.2": canvas, draw, vector, matrix
+
+// #set page(width: auto, height: auto, margin: .5cm)
+
 #canvas({
   import draw: *
 
-  // Set up the transformation matrix
-  set-transform(matrix.transform-rotate-dir((1, 1, -1.3), (0, 1, .3)))
-  scale(x: 1.5, z: -1)
-
-  grid((0,-2), (8,2), stroke: gray + .5pt)
-
-  // Draw a sine wave on the xy plane
-  let wave(amplitude: 1, fill: none, phases: 2, scale: 8, samples: 100) = {
-    line(..(for x in range(0, samples + 1) {
-      let x = x / samples
-      let p = (2 * phases * calc.pi) * x
-      ((x * scale, calc.sin(p) * amplitude),)
-    }), fill: fill)
-
-    let subdivs = 8
-    for phase in range(0, phases) {
-      let x = phase / phases
-      for div in range(1, subdivs + 1) {
-        let p = 2 * calc.pi * (div / subdivs)
-        let y = calc.sin(p) * amplitude
-        let x = x * scale + div / subdivs * scale / phases
-        line((x, 0), (x, y), stroke: rgb(0, 0, 0, 150) + .5pt)
-      }
-    }
-  }
-
-  group({
-    rotate(x: 90deg)
-    wave(amplitude: 1.6, fill: rgb(0, 0, 255, 50))
-  })
-  wave(amplitude: 1, fill: rgb(255, 0, 0, 50))
-})
-```
-
-#import "@preview/cetz:0.2.0": canvas, draw, vector, matrix
-#img(
-  canvas({
-    import draw: *
-
-    // Set up the transformation matrix
-    set-transform(matrix.transform-rotate-dir((1, 1, -1.3), (0, 1, .3)))
-    scale(x: 1.5, z: -1)
-
-    grid((0,-2), (8,2), stroke: gray + .5pt)
+  ortho(y: -30deg, x: 30deg, {
+    on-xz({
+      grid((0,-2), (8,2), stroke: gray + .5pt)
+    })
 
     // Draw a sine wave on the xy plane
     let wave(amplitude: 1, fill: none, phases: 2, scale: 8, samples: 100) = {
@@ -175,13 +141,65 @@ $ f(x, y) := cases(
       }
     }
 
-    group({
-      rotate(x: 90deg)
+    on-xy({
       wave(amplitude: 1.6, fill: rgb(0, 0, 255, 50))
     })
-    wave(amplitude: 1, fill: rgb(255, 0, 0, 50))
+    on-xz({
+      wave(amplitude: 1, fill: rgb(255, 0, 0, 50))
+    })
+  })
+})
+```
+
+#import "@preview/cetz:0.4.2": canvas, draw, matrix, vector
+
+#img(
+  canvas({
+    import draw: *
+
+    ortho(y: -30deg, x: 30deg, {
+      on-xz({
+        grid(
+          (0, -2),
+          (8, 2),
+          stroke: gray + .5pt,
+        )
+      })
+
+      // Draw a sine wave on the xy plane
+      let wave(amplitude: 1, fill: none, phases: 2, scale: 8, samples: 100) = {
+        line(
+          ..(
+            for x in range(0, samples + 1) {
+              let x = x / samples
+              let p = (2 * phases * calc.pi) * x
+              ((x * scale, calc.sin(p) * amplitude),)
+            }
+          ),
+          fill: fill,
+        )
+
+        let subdivs = 8
+        for phase in range(0, phases) {
+          let x = phase / phases
+          for div in range(1, subdivs + 1) {
+            let p = 2 * calc.pi * (div / subdivs)
+            let y = calc.sin(p) * amplitude
+            let x = x * scale + div / subdivs * scale / phases
+            line((x, 0), (x, y), stroke: rgb(0, 0, 0, 150) + .5pt)
+          }
+        }
+      }
+
+      on-xy({
+        wave(amplitude: 1.6, fill: rgb(0, 0, 255, 50))
+      })
+      on-xz({
+        wave(amplitude: 1, fill: rgb(255, 0, 0, 50))
+      })
+    })
   }),
-  caption: [CetZで描いた図の例（公式GitHubリポジトリより引用）]
+  caption: [CetZで描いた図の例（公式GitHubリポジトリより引用）],
 )
 
 = 自分でスタイルを定義する
@@ -206,7 +224,7 @@ Typstでは定理の書き方などをカスタマイズできます.
 #let theorem = thmbox(
   "theorem",
   "定理",
-  base_level: 1
+  base_level: 1,
 )
 
 #theorem("湯川")[
@@ -248,7 +266,7 @@ identifier毎にカウントを柔軟に変えられるようにしてあるの�
 )
 #definition("Prime numbers")[
   A natural number is called a _prime number_ if it is greater than $1$ and
-  cannot be written as the product of two smaller natural numbers. 
+  cannot be written as the product of two smaller natural numbers.
 ] <definition>
 ```
 
@@ -260,7 +278,7 @@ identifier毎にカウントを柔軟に変えられるようにしてあるの�
 )
 
 #definition[
-  Typst is a new markup-based typesetting system for the sciences. 
+  Typst is a new markup-based typesetting system for the sciences.
 ] <definition>
 
 このように、「@definition」のカウントは「2.1」にリセットされていますね。
@@ -302,7 +320,7 @@ baseにidentifierを入れることで@corollary のようにサブカウント�
 
 #let example = thmplain(
   "example",
-  "例"
+  "例",
 ).with(numbering: none)
 
 #example[
@@ -313,7 +331,7 @@ thmplain関数を使ってplain表現も可能です.
 
 #appendix[
   = こういう機能もいるよね
-  
+
   コンテンツの周囲を `#appendix[]` で囲むと、そのコンテンツはそのまま付録セクションになります。ナンバリング方式もアルファベットに変わります。
 
   ```typ

@@ -15,9 +15,7 @@
 
 #let name_box(id: "", name: "") = {
   set align(left)
-  set text(
-    size: 13pt,
-  )
+  set text(size: 13pt)
   [
     #text(font: fontGothic)[*学籍番号*] : #text(font: (fontLatin, fontMincho))[#id]
     #parbreak()
@@ -28,14 +26,16 @@
 #let report(body) = {
   set text(
     font: (fontLatin, fontMincho),
-    size: fontSizeDefault
+    size: fontSizeDefault,
   )
 
   set page(
     paper: "a4",
     margin: (
-      bottom: 1.75cm, top: 2.5cm,
-      left: 2cm, right: 2cm
+      bottom: 1.75cm,
+      top: 2.5cm,
+      left: 2cm,
+      right: 2cm,
     ),
   )
 
@@ -60,7 +60,7 @@
       // Override equation references.
       numbering(
         "式 " + el.numbering,
-        ..counter(eq).at(el.location())
+        ..counter(eq).at(el.location()),
       )
     } else {
       // Other references as usual.
@@ -72,7 +72,7 @@
     set text(
       font: fontGothic,
       weight: "bold",
-      size: 22pt
+      size: 22pt,
     )
     text()[
       #it.body
@@ -83,7 +83,7 @@
     set text(
       font: fontGothic,
       weight: "semibold",
-      size: fontSizeHeading
+      size: fontSizeHeading,
     )
     text()[
       #it.body
@@ -94,21 +94,24 @@
     set text(
       font: fontGothic,
       weight: "medium",
-      size: fontSizeDefault + 2pt
+      size: fontSizeDefault + 2pt,
     )
     text()[
       #it.body
     ]
   })
 
-  show heading: it => {
-    set text(
-      weight: "medium",
-      size: fontSizeDefault,
-    )
-    set block(above: 2em, below: 1.5em)
-    it
-  } + empty_par()
+  show heading: it => (
+    {
+      set text(
+        weight: "medium",
+        size: fontSizeDefault,
+      )
+      set block(above: 2em, below: 1.5em)
+      it
+    }
+      + empty_par()
+  )
 
   set page(numbering: "1 / 1")
 

@@ -7,20 +7,17 @@
   h3: 14pt,
   under_h4: 12pt,
   normal: 11pt,
-  math: 12pt
+  math: 12pt,
 )
 
 // Store theorem environment numbering
-#let thmcounters = state("thm",
-  (
-    "counters": ("heading": ()),
-    "latest": ()
-  )
-)
+#let thmcounters = state("thm", (
+  "counters": ("heading": ()),
+  "latest": (),
+))
 
 // Setting theorem environment
 #let thmenv(identifier, base, base_level, fmt) = {
-
   let global_numbering = numbering
 
   return (
@@ -31,7 +28,7 @@
     refnumbering: auto,
     supplement: identifier,
     base: base,
-    base_level: base_level
+    base_level: base_level,
   ) => {
     let name = none
     if args != none and args.pos().len() > 0 {
@@ -52,7 +49,7 @@
           // Manually update heading counter
           counters.at("heading") = heading-counter
           if not identifier in counters.keys() {
-            counters.insert(identifier, (0, ))
+            counters.insert(identifier, (0,))
           }
 
           let tc = counters.at(identifier)
@@ -63,7 +60,7 @@
             if base_level != none {
               if bc.len() < base_level {
                 bc = bc + (0,) * (base_level - bc.len())
-              } else if bc.len() > base_level{
+              } else if bc.len() > base_level {
                 bc = bc.slice(0, base_level)
               }
             }
@@ -83,7 +80,7 @@
           let latest = counters.at(identifier)
           return (
             "counters": counters,
-            "latest": latest
+            "latest": latest,
           )
         })
       }
@@ -94,9 +91,10 @@
     }
 
     return figure(
-      result +  // hacky!
-      fmt(name, number, body, ..args.named()) +
-      [#metadata(identifier) <meta:thmenvcounter>],
+      result
+        + // hacky!
+        fmt(name, number, body, ..args.named())
+        + [#metadata(identifier) <meta:thmenvcounter>],
       kind: "thmenv",
       outlined: false,
       caption: none,
@@ -145,15 +143,15 @@
         radius: 0.3em,
         breakable: false,
         ..blockargs.named(),
-        [#title#name#separator#body]
-      )
+        [#title#name#separator#body],
+      ),
     )
   }
   return thmenv(
     identifier,
     base,
     base_level,
-    boxfmt
+    boxfmt,
   ).with(
     supplement: supplement,
   )
@@ -228,10 +226,10 @@
         #text(
           font: (
             "Times New Roman",
-            "IPAPGothic"
+            "IPAPGothic",
           ),
           size: 20pt,
-          weight: "bold"
+          weight: "bold",
         )[
           概 #h(5pt) 要
         ]
@@ -253,10 +251,10 @@
         #text(
           font: (
             "Times New Roman",
-            "Source Han Serif JP"
+            "Source Han Serif JP",
           ),
           weight: "bold",
-          size: 12pt
+          size: 12pt,
         )[
           キーワード:
           #keywords_ja.join(", ")
@@ -266,7 +264,7 @@
     // pagebreak()
   }
 
-  if abstract_en != []{
+  if abstract_en != [] {
     show <_en_abstract_>: {
       align(center)[
         #text(
@@ -274,7 +272,7 @@
             "Times New Roman"
           ),
           size: 18pt,
-          "Abstruct"
+          "Abstruct",
         )
       ]
     }
@@ -289,9 +287,9 @@
           "Times New Roman"
         ),
         weight: "bold",
-        size: 12pt
+        size: 12pt,
       )[
-        Key Words: 
+        Key Words:
         #keywords_en.join("; ")
       ]
     ]
@@ -318,10 +316,10 @@
     #text(
       font: (
         "Times New Roman",
-        "IPAPGothic"
+        "IPAPGothic",
       ),
       size: 20pt,
-      weight: "bold"
+      weight: "bold",
     )[
       #v(20pt)
       目 #h(5pt) 次
@@ -334,7 +332,7 @@
   context {
     let elements = query(heading.where(outlined: true))
     for el in elements {
-      let before_toc = query(heading.where(outlined: true).before(here())).find((one) => {one.body == el.body}) != none
+      let before_toc = query(heading.where(outlined: true).before(here())).find(one => { one.body == el.body }) != none
       let page_num = if before_toc {
         numbering("i", counter(page).at(el.location()).first())
       } else {
@@ -345,23 +343,23 @@
         // acknoledgement has no numbering
         let chapt_num = if el.numbering != none {
           numbering(el.numbering, ..counter(heading).at(el.location()))
-        } else {none}
+        } else { none }
 
         if el.level == 1 {
           set text(
             font: (
               "Times New Roman",
-              "UDEV Gothic"
+              "UDEV Gothic",
             ),
-            weight: "bold"
+            weight: "bold",
           )
           if chapt_num == none {} else {
             set text(
               font: (
                 "Times New Roman",
-                "UDEV Gothic"
+                "UDEV Gothic",
               ),
-              weight: "bold"
+              weight: "bold",
             )
             chapt_num
             h(1em)
@@ -372,9 +370,9 @@
           set text(
             font: (
               "Times New Roman",
-              "Source Han Serif JP"
+              "Source Han Serif JP",
             ),
-            weight: "regular"
+            weight: "regular",
           )
           h(2em)
           chapt_num
@@ -384,9 +382,9 @@
           set text(
             font: (
               "Times New Roman",
-              "Source Han Serif JP"
+              "Source Han Serif JP",
             ),
-            weight: "regular"
+            weight: "regular",
           )
           h(4em)
           chapt_num
@@ -407,10 +405,10 @@
     #text(
       font: (
         "Times New Roman",
-        "IPAPGothic"
+        "IPAPGothic",
       ),
       size: 20pt,
-      weight: "bold"
+      weight: "bold",
     )[
       #v(20pt)
       図 #h(5pt) 目 #h(5pt) 次
@@ -444,10 +442,10 @@
     #text(
       font: (
         "Times New Roman",
-        "IPAPGothic"
+        "IPAPGothic",
       ),
       size: 20pt,
-      weight: "bold"
+      weight: "bold",
     )[
       #v(20pt)
       表 #h(5pt) 目 #h(5pt) 次
@@ -457,7 +455,7 @@
 
   set text(size: 12pt)
   set par(leading: 1em, first-line-indent: 0pt)
-   context {
+  context {
     let elements = query(figure.where(outlined: true, kind: "table"))
     for el in elements {
       let chapt = counter(heading).at(el.location()).at(0)
@@ -486,10 +484,10 @@
   #let i = counter(page).get().first()
   #let ht-first = state("page-first-section", [])
   #let ht-last = state("page-last-section", [])
-      
+
   // find first heading of level 1 on current page
   #let first-heading = query(heading.where(level: 1)).find(h => h.location().page() == locate(here()).page())
-      
+
   // find last heading of level 1 on current page
   #let last-heading = query(heading.where(level: 1)).rev().find(h => h.location().page() == locate(here()).page())
 
@@ -545,10 +543,10 @@
     } else {
       return [#(value + "." + nums.pos().slice(1).map(str).join(".")) #h(0.5em)]
     }
-  });
+  })
 
   set page(
-    header: custom_header()
+    header: custom_header(),
   )
 
   let before_h1(it) = if it.numbering != none {
@@ -566,10 +564,10 @@
     set text(
       font: (
         "Times New Roman",
-        "UDEV Gothic"
+        "UDEV Gothic",
       ),
       weight: "medium",
-      size: font_sizes.at("h1")
+      size: font_sizes.at("h1"),
     )
     set block(spacing: 1.5em)
     text()[
@@ -581,10 +579,10 @@
     set text(
       font: (
         "Times New Roman",
-        "UDEV Gothic"
+        "UDEV Gothic",
       ),
       weight: "medium",
-      size: font_sizes.at("h2")
+      size: font_sizes.at("h2"),
     )
     text()[
       #it
@@ -598,10 +596,8 @@
 #let master_thesis(
   // The master thesis title.
   title: "ここにtitleが入る",
-
   // The paper`s author.
   author: "ここに著者が入る",
-
   // The author's information
   university: "",
   school: "",
@@ -611,25 +607,19 @@
   mentor-post: "",
   class: "修士",
   date: (datetime.today().year(), datetime.today().month(), datetime.today().day()),
-
   paper-type: "論文",
-
   // Abstruct
   abstract_ja: [],
   abstract_en: [],
   keywords_ja: (),
   keywords_en: (),
-
   // The paper size to use.
   paper-size: "a4",
-
   // The path to a bibliography file if you want to cite some external
   // works.
   bibliography-file: none,
-
   enable_toc_of_image: true,
   enable_toc_of_table: true,
-
   // The paper's content.
   body,
 ) = {
@@ -641,15 +631,15 @@
   set text(
     font: (
       "Times New Roman",
-      "Source Han Serif JP"
+      "Source Han Serif JP",
     ),
-    size: font_sizes.at("normal")
+    size: font_sizes.at("normal"),
   )
   show strong: set text(
     font: (
       "Times New Roman",
-      "IPAPGothic"
-    )
+      "IPAPGothic",
+    ),
   )
 
   // Set font size
@@ -665,8 +655,10 @@
   set page(
     paper: paper-size,
     margin: (
-      bottom: 1.75cm, top: 2.5cm,
-      left: 2cm, right: 2cm
+      bottom: 1.75cm,
+      top: 2.5cm,
+      left: 2cm,
+      right: 2cm,
     ),
   )
 
@@ -678,7 +670,7 @@
       let chapt = counter(heading).at(loc).at(0)
 
       link(loc)[#if el.kind == "image" or el.kind == "table" {
-          // counting 
+          // counting
           let num = counter(el.kind + "-chapter" + str(chapt)).at(loc).at(0) + 1
           it.element.supplement
           " "
@@ -763,7 +755,7 @@
     fill: luma(240),
     inset: (x: 3pt, y: 0pt),
     outset: (y: 3pt),
-    radius: 2pt
+    radius: 2pt,
   )
 
   // Display block code in a larger block
@@ -780,8 +772,8 @@
     #set text(
       font: (
         "Times New Roman",
-        "Source Han Serif JP"
-      ) 
+        "Source Han Serif JP",
+      ),
     )
 
     #v(80pt)
@@ -801,9 +793,9 @@
       size: 22pt,
       font: (
         "Times New Roman",
-        "IPAPGothic"
+        "IPAPGothic",
       ),
-      weight: "bold"
+      weight: "bold",
     )[
       #title
     ]
@@ -821,7 +813,7 @@
         指導教員: #mentor #mentor-post
       ]
     }
-    
+
     #v(40pt)
     #text(
       size: 16pt,
@@ -845,7 +837,7 @@
   set par(leading: 0.8em, first-line-indent: 20pt, justify: true)
   set par(spacing: 1.2em)
 
-   // Configure chapter headings.
+  // Configure chapter headings.
   set heading(numbering: (..nums) => {
     if nums.pos().len() == 1 {
       return [第 #nums.pos().map(str).join(".") 章]
@@ -859,7 +851,7 @@
       #numbering(it.numbering, ..counter(heading).at(it.location()))
       #h(1em)
     ]
-  } 
+  }
 
   show heading.where(level: 1): it => {
     pagebreak()
@@ -867,10 +859,10 @@
     set text(
       font: (
         "Times New Roman",
-        "UDEV Gothic"
+        "UDEV Gothic",
       ),
       weight: "medium",
-      size: font_sizes.at("h1")
+      size: font_sizes.at("h1"),
     )
     set block(spacing: 1.5em)
     text()[
@@ -879,50 +871,49 @@
     ]
   }
 
-  show heading.where(level: 2): it => block(
-    {
-      set text(
-        font: (
-          "Times New Roman",
-          "UDEV Gothic"
-        ),
-        weight: "medium",
-        size: font_sizes.at("h2")
-      )
-      text()[
-        #it
-      ]
-    }
-  )
-
-  show heading.where(level: 3): it => block(
-    {
-      set text(
-        font: (
-          "Times New Roman",
-          "UDEV Gothic"
-        ),
-        weight: "medium",
-        size: font_sizes.at("h3")
-      )
-      text()[
-        #it
-      ]
-    }
-  )
-
-  show heading: it => {
+  show heading.where(level: 2): it => block({
     set text(
       font: (
         "Times New Roman",
-        "UDEV Gothic"
+        "UDEV Gothic",
       ),
-      weight: "bold",
-      size: font_sizes.at("under_h4")
+      weight: "medium",
+      size: font_sizes.at("h2"),
     )
-    set block(above: 2em, below: 1.5em)
-    it
-  } + empty_par() // 最初の段落のインデントを下げるためにダミーの段落を設置する
+    text()[
+      #it
+    ]
+  })
+
+  show heading.where(level: 3): it => block({
+    set text(
+      font: (
+        "Times New Roman",
+        "UDEV Gothic",
+      ),
+      weight: "medium",
+      size: font_sizes.at("h3"),
+    )
+    text()[
+      #it
+    ]
+  })
+
+  show heading: it => (
+    {
+      set text(
+        font: (
+          "Times New Roman",
+          "UDEV Gothic",
+        ),
+        weight: "bold",
+        size: font_sizes.at("under_h4"),
+      )
+      set block(above: 2em, below: 1.5em)
+      it
+    }
+      + empty_par()
+  ) // 最初の段落のインデントを下げるためにダミーの段落を設置する
 
 
   // Start with a chapter outline.
@@ -940,7 +931,7 @@
   // Start main pages.
   set page(
     header: custom_header(),
-    numbering: "1"
+    numbering: "1",
   )
 
   counter(page).update(1)
@@ -955,24 +946,33 @@
     bibliography(
       bibliography-file,
       title: "参考文献",
-      style: "ieee"
+      style: "ieee",
     )
   }
 }
 
 // LATEX character
 #let LATEX = {
-  [L];box(move(
-    dx: -4.2pt, dy: -1.2pt,
-    box(scale(65%)[A])
-  ));box(move(
-  dx: -5.7pt, dy: 0pt,
-  [T]
-));box(move(
-  dx: -7.0pt, dy: 2.7pt,
-  box(scale(100%)[E])
-));box(move(
-  dx: -8.0pt, dy: 0pt,
-  [X]
-));h(-8.0pt)
+  [L]
+  box(move(
+    dx: -4.2pt,
+    dy: -1.2pt,
+    box(scale(65%)[A]),
+  ))
+  box(move(
+    dx: -5.7pt,
+    dy: 0pt,
+    [T],
+  ))
+  box(move(
+    dx: -7.0pt,
+    dy: 2.7pt,
+    box(scale(100%)[E]),
+  ))
+  box(move(
+    dx: -8.0pt,
+    dy: 0pt,
+    [X],
+  ))
+  h(-8.0pt)
 }
