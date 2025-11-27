@@ -562,25 +562,19 @@
     pagebreak()
     counter(math.equation).update(0)
     set text(
-      font: (
-        "Times New Roman",
-        "UDEV Gothic",
-      ),
-      weight: "medium",
+      font: ("Times New Roman", "UDEV Gothic"),
+      weight: "bold",
       size: font_sizes.at("h1"),
     )
     set block(spacing: 1.5em)
     text()[
-      #before_h1(it) #h(0.5em) #it.body #v(0pt)
+      #before_h1(it) #linebreak() #it.body #v(0pt)
     ]
   }
 
   show heading.where(level: 2): it => block({
     set text(
-      font: (
-        "Times New Roman",
-        "UDEV Gothic",
-      ),
+      font: ("Times New Roman", "UDEV Gothic"),
       weight: "medium",
       size: font_sizes.at("h2"),
     )
@@ -590,6 +584,29 @@
   })
 
   [#body]
+}
+
+#let show-bibliography-default(bibliography-file, bibliography-csl-path) = {
+  show bibliography: set text(12pt)
+  show heading.where(level: 1): it => {
+    pagebreak()
+    counter(math.equation).update(0)
+    set text(
+      font: ("Times New Roman", "UDEV Gothic"),
+      size: font_sizes.at("h1"),
+    )
+    text(weight: "bold")[#it.body]
+  }
+
+  bibliography(
+    bibliography-file,
+    title: "参考文献",
+    style: if bibliography-csl-path != none {
+      bibliography-csl-path
+    } else {
+      "ieee"
+    },
+  )
 }
 
 // Construction of paper
@@ -618,6 +635,7 @@
   // The path to a bibliography file if you want to cite some external
   // works.
   bibliography-file: none,
+  bibliography-csl-path: none,
   enable_toc_of_image: true,
   enable_toc_of_table: true,
   // The paper's content.
@@ -629,17 +647,11 @@
   // Set the body font. TeX Gyre Pagella is a free alternative
   // to Palatino.
   set text(
-    font: (
-      "Times New Roman",
-      "Source Han Serif JP",
-    ),
+    font: ("Times New Roman", "Source Han Serif JP"),
     size: font_sizes.at("normal"),
   )
   show strong: set text(
-    font: (
-      "Times New Roman",
-      "IPAPGothic",
-    ),
+    font: ("Times New Roman", "IPAPGothic"),
   )
 
   // Set font size
@@ -770,54 +782,38 @@
   // The first page.
   align(center)[
     #set text(
-      font: (
-        "Times New Roman",
-        "Source Han Serif JP",
-      ),
+      font: ("Times New Roman", "Source Han Serif JP"),
     )
 
     #v(80pt)
-    #text(
-      size: 16pt,
-    )[
+    #text(size: 16pt)[
       #university #school #department
     ]
 
-    #text(
-      size: 16pt,
-    )[
+    #text(size: 16pt)[
       #class#paper-type
     ]
     #v(40pt)
     #text(
       size: 22pt,
-      font: (
-        "Times New Roman",
-        "IPAPGothic",
-      ),
+      font: ("Times New Roman", "IPAPGothic"),
       weight: "bold",
     )[
       #title
     ]
     #v(50pt)
-    #text(
-      size: 16pt,
-    )[
-      #id #author
+    #text(size: 16pt)[
+      #id #v(0pt) #author
     ]
 
     #if (mentor != "" or mentor-post != "") {
-      text(
-        size: 16pt,
-      )[
+      text(size: 16pt)[
         指導教員: #mentor #mentor-post
       ]
     }
 
     #v(40pt)
-    #text(
-      size: 16pt,
-    )[
+    #text(size: 16pt)[
       #date.at(0) 年 #date.at(1) 月 #date.at(2) 日 提出
     ]
 
@@ -857,26 +853,21 @@
     pagebreak()
     counter(math.equation).update(0)
     set text(
-      font: (
-        "Times New Roman",
-        "UDEV Gothic",
-      ),
-      weight: "medium",
+      font: ("Times New Roman", "UDEV Gothic"),
       size: font_sizes.at("h1"),
     )
     set block(spacing: 1.5em)
-    text()[
+    text(weight: "bold")[
       #v(10pt)
-      #before_h1(it) #it.body
+      #before_h1(it)
+      #linebreak()
     ]
+    text(weight: "bold")[#it.body]
   }
 
   show heading.where(level: 2): it => block({
     set text(
-      font: (
-        "Times New Roman",
-        "UDEV Gothic",
-      ),
+      font: ("Times New Roman", "UDEV Gothic"),
       weight: "medium",
       size: font_sizes.at("h2"),
     )
@@ -887,10 +878,7 @@
 
   show heading.where(level: 3): it => block({
     set text(
-      font: (
-        "Times New Roman",
-        "UDEV Gothic",
-      ),
+      font: ("Times New Roman", "UDEV Gothic"),
       weight: "medium",
       size: font_sizes.at("h3"),
     )
@@ -902,10 +890,7 @@
   show heading: it => (
     {
       set text(
-        font: (
-          "Times New Roman",
-          "UDEV Gothic",
-        ),
+        font: ("Times New Roman", "UDEV Gothic"),
         weight: "bold",
         size: font_sizes.at("under_h4"),
       )
@@ -942,12 +927,7 @@
 
   // Display bibliography.
   if bibliography-file != none {
-    show bibliography: set text(12pt)
-    bibliography(
-      bibliography-file,
-      title: "参考文献",
-      style: "ieee",
-    )
+    show-bibliography-default(bibliography-file, bibliography-csl-path)
   }
 }
 
