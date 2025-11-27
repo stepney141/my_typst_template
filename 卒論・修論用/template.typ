@@ -493,9 +493,8 @@
 
   // don't show chapter numbering in header of bibliography page
   #let header-chapt-num(content) = {
-    let bibliography-content = query(bibliography).at(0)
-
-    if not content.at("body") == bibliography-content.at("title") {
+    let bibliography-content = query(bibliography)
+    if bibliography-content.len() == 0 or content.at("body") != bibliography-content.at(0).at("title") {
       return [
         #numbering(content.numbering, ..counter(heading).at(content.location()))
         #h(10pt)
@@ -531,7 +530,60 @@
   #line(length: 100%, stroke: 0.5pt + black)
 ]
 
+#let bibliography_state = state("bibliography-state", (
+  "file": none,
+  "csl": none,
+  "shown": false,
+))
+
+#let configure_bibliography(file, csl) = {
+  bibliography_state.update(_ => (
+    "file": file,
+    "csl": csl,
+    "shown": false,
+  ))
+}
+
+#let show-bibliography-default(bibliography-file, bibliography-csl-path) = {
+  show bibliography: set text(12pt)
+  show heading.where(level: 1): it => {
+    pagebreak()
+    counter(math.equation).update(0)
+    set text(
+      font: ("Times New Roman", "UDEV Gothic"),
+      size: font_sizes.at("h1"),
+    )
+    text(weight: "bold")[#it.body]
+  }
+
+  bibliography(
+    bibliography-file,
+    title: "参考文献",
+    full: true,
+    style: if bibliography-csl-path != none {
+      bibliography-csl-path
+    } else {
+      "ieee"
+    },
+  )
+}
+
+#let render_bibliography_if_needed() = context {
+  let config = bibliography_state.get()
+  if config.at("file") == none or config.at("shown") {
+    return none
+  }
+
+  show-bibliography-default(config.at("file"), config.at("csl"))
+  bibliography_state.update(conf => {
+    conf.at("shown") = true
+    conf
+  })
+}
+
 #let appendix(body) = {
+  render_bibliography_if_needed()
+
   counter(heading).update(0)
   counter("appendix").update(1)
 
@@ -586,29 +638,6 @@
   [#body]
 }
 
-#let show-bibliography-default(bibliography-file, bibliography-csl-path) = {
-  show bibliography: set text(12pt)
-  show heading.where(level: 1): it => {
-    pagebreak()
-    counter(math.equation).update(0)
-    set text(
-      font: ("Times New Roman", "UDEV Gothic"),
-      size: font_sizes.at("h1"),
-    )
-    text(weight: "bold")[#it.body]
-  }
-
-  bibliography(
-    bibliography-file,
-    title: "参考文献",
-    style: if bibliography-csl-path != none {
-      bibliography-csl-path
-    } else {
-      "ieee"
-    },
-  )
-}
-
 // Construction of paper
 #let master_thesis(
   // The master thesis title.
@@ -643,6 +672,8 @@
 ) = {
   // Set the document's metadata.
   set document(title: title, author: author)
+
+  configure_bibliography(bibliography-file, bibliography-csl-path)
 
   // Set the body font. TeX Gyre Pagella is a free alternative
   // to Palatino.
@@ -808,7 +839,7 @@
 
     #if (mentor != "" or mentor-post != "") {
       text(size: 16pt)[
-        指導教員: #mentor #mentor-post
+        指導教員 : #mentor #mentor-post
       ]
     }
 
@@ -925,10 +956,7 @@
 
   body
 
-  // Display bibliography.
-  if bibliography-file != none {
-    show-bibliography-default(bibliography-file, bibliography-csl-path)
-  }
+  render_bibliography_if_needed()
 }
 
 // LATEX character
