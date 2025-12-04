@@ -9,6 +9,11 @@
   normal: 11pt,
   math: 12pt,
 )
+#let font_sizes_cover = (
+  title: 22pt,
+  subtitle: 20pt,
+  normal: 17pt,
+)
 
 // Store theorem environment numbering
 #let thmcounters = state("thm", (
@@ -493,15 +498,13 @@
 
   // don't show chapter numbering in header of bibliography page
   #let header-chapt-num(content) = {
-    let bibliography-content = query(bibliography)
-    if bibliography-content.len() == 0 or content.at("body") != bibliography-content.at(0).at("title") {
-      return [
-        #numbering(content.numbering, ..counter(heading).at(content.location()))
-        #h(10pt)
-      ]
-    } else {
+    if content.numbering == none {
       return none
     }
+    [
+      #numbering(content.numbering, ..counter(heading).at(content.location()))
+      #h(10pt)
+    ]
   }
 
   // test if the find function returned none (i.e. no headings on this page)
@@ -553,12 +556,17 @@
       font: ("Times New Roman", "UDEV Gothic"),
       size: font_sizes.at("h1"),
     )
-    text(weight: "bold")[#it.body]
+    text(weight: "bold")[
+      #v(0.5em)
+      #it.body
+      #v(0.5em)
+    ]
   }
+  heading(level: 1, numbering: none)[参考文献]
 
   bibliography(
     bibliography-file,
-    title: "参考文献",
+    title: none,
     full: true,
     style: if bibliography-csl-path != none {
       bibliography-csl-path
@@ -642,7 +650,8 @@
 #let master_thesis(
   // The master thesis title.
   title: "ここにtitleが入る",
-  // The paper`s author.
+  subtitle: none,
+  // The paper`s author
   author: "ここに著者が入る",
   // The author's information
   university: "",
@@ -653,6 +662,7 @@
   mentor-post: "",
   class: "修士",
   date: (datetime.today().year(), datetime.today().month(), datetime.today().day()),
+  year: datetime.today().year(), // 提出年度（提出日時が必要ない場合に使う）
   paper-type: "論文",
   // Abstruct
   abstract_ja: [],
@@ -661,12 +671,11 @@
   keywords_en: (),
   // The paper size to use.
   paper-size: "a4",
-  // The path to a bibliography file if you want to cite some external
-  // works.
+  // The path to a bibliography file if you want to cite some external works.
   bibliography-file: none,
   bibliography-csl-path: none,
-  enable_toc_of_image: true,
-  enable_toc_of_table: true,
+  enable_toc_of_image: false,
+  enable_toc_of_table: false,
   // The paper's content.
   body,
 ) = {
@@ -690,18 +699,17 @@
   show footnote: set text(15pt)
   show math.equation: set text(font_sizes.at("math"))
 
-
-  set list(indent: 7pt)
-  set enum(indent: 7pt)
+  set list(indent: 10pt)
+  set enum(indent: 10pt)
 
   // Configure the page properties.
   set page(
     paper: paper-size,
     margin: (
-      bottom: 1.75cm,
-      top: 2.5cm,
-      left: 2cm,
-      right: 2cm,
+      top: 3cm,
+      left: 3cm,
+      right: 3cm,
+      bottom: 2.5cm,
     ),
   )
 
@@ -817,43 +825,46 @@
     )
 
     #v(80pt)
-    #text(size: 16pt)[
-      #university #school #department
-    ]
-
-    #text(size: 16pt)[
+    #text(size: font_sizes_cover.at("normal"))[
       #class#paper-type
     ]
     #v(40pt)
     #text(
-      size: 22pt,
-      font: ("Times New Roman", "IPAPGothic"),
-      weight: "bold",
+      font: ("Times New Roman", "UDEV Gothic"),
+      weight: "medium",
     )[
-      #title
+      #text(size: font_sizes_cover.at("title"))[#title]
+      #if subtitle != none {
+        v(10pt)
+        text(size: font_sizes_cover.at("subtitle"))[#subtitle]
+      }
     ]
-    #v(50pt)
-    #text(size: 16pt)[
+    #v(150pt)
+    #text(size: font_sizes_cover.at("normal"))[
+      #if (year != none) {
+        text()[#year 年度]
+      }
+
+      #university #school #department
+
       #id #v(0pt) #author
     ]
 
     #if (mentor != "" or mentor-post != "") {
-      text(size: 16pt)[
+      text(size: font_sizes_cover.at("normal"))[
         指導教員 : #mentor #mentor-post
       ]
     }
 
     #v(40pt)
-    #text(size: 16pt)[
-      #date.at(0) 年 #date.at(1) 月 #date.at(2) 日 提出
-    ]
+    #if (date != none) {
+      text(size: font_sizes_cover.at("normal"))[#date.at(0) 年 #date.at(1) 月 #date.at(2) 日 提出]
+    }
 
     #pagebreak()
   ]
 
-  set page(
-    numbering: "i",
-  )
+  set page(numbering: "i")
 
   counter(page).update(1)
 
@@ -902,9 +913,7 @@
       weight: "medium",
       size: font_sizes.at("h2"),
     )
-    text()[
-      #it
-    ]
+    text()[#it]
   })
 
   show heading.where(level: 3): it => block({
@@ -913,9 +922,16 @@
       weight: "medium",
       size: font_sizes.at("h3"),
     )
-    text()[
-      #it
-    ]
+    text()[#it]
+  })
+
+  show heading.where(level: 4): it => block({
+    set text(
+      font: ("Times New Roman", "UDEV Gothic"),
+      weight: "bold",
+      size: font_sizes.at("under_h4"),
+    )
+    text()[#it.body]
   })
 
   show heading: it => (
