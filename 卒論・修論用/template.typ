@@ -589,6 +589,50 @@
   })
 }
 
+#let set_common_subheadings(body) = {
+  show heading.where(level: 2): it => block({
+    set text(
+      font: ("Times New Roman", "UDEV Gothic"),
+      weight: "medium",
+      size: font_sizes.at("h2"),
+    )
+    text()[#it]
+  })
+
+  show heading.where(level: 3): it => block({
+    set text(
+      font: ("Times New Roman", "UDEV Gothic"),
+      weight: "medium",
+      size: font_sizes.at("h3"),
+    )
+    text()[#it]
+  })
+
+  show heading.where(level: 4): it => block({
+    set text(
+      font: ("Times New Roman", "UDEV Gothic"),
+      weight: "bold",
+      size: font_sizes.at("under_h4"),
+    )
+    text()[#it.body]
+  })
+
+  show heading: it => (
+    {
+      set text(
+        font: ("Times New Roman", "UDEV Gothic"),
+        weight: "bold",
+        size: font_sizes.at("under_h4"),
+      )
+      set block(above: 2em, below: 1.5em)
+      it
+    }
+      + empty_par()
+  ) // 最初の段落のインデントを下げるためにダミーの段落を設置する
+
+  body
+}
+
 #let appendix(body) = {
   render_bibliography_if_needed()
 
@@ -632,18 +676,46 @@
     ]
   }
 
-  show heading.where(level: 2): it => block({
+  set_common_subheadings([#body])
+}
+
+#let main-chapter-pages(body) = {
+  set page(
+    header: custom_header(),
+    numbering: "1",
+  )
+
+  counter(page).update(1)
+
+  set math.equation(supplement: [式], numbering: equation_num)
+
+  let before_h1(it) = if it.numbering != none {
+    text()[
+      #numbering(it.numbering, ..counter(heading).at(it.location()))
+      #h(1em)
+    ]
+  }
+
+  show heading.where(level: 1): it => {
+    pagebreak()
+    counter(math.equation).update(0)
     set text(
       font: ("Times New Roman", "UDEV Gothic"),
-      weight: "medium",
-      size: font_sizes.at("h2"),
+      size: font_sizes.at("h1"),
     )
-    text()[
-      #it
+    set block(spacing: 1.5em)
+    text(weight: "bold")[
+      #v(10pt)
+      #before_h1(it)
+      #linebreak()
     ]
-  })
+    text(weight: "bold")[
+      #it.body
+      #v(10pt)
+    ]
+  }
 
-  [#body]
+  set_common_subheadings(body)
 }
 
 // Construction of paper
@@ -872,8 +944,8 @@
   abstract_page(abstract_ja, abstract_en, keywords_ja: keywords_ja, keywords_en: keywords_en)
 
   // Configure paragraph properties.
-  set par(leading: 0.8em, first-line-indent: 20pt, justify: true)
-  set par(spacing: 1.2em)
+  let par-distance = 0.9em
+  set par(leading: par-distance, spacing: par-distance, first-line-indent: 20pt, justify: true)
 
   // Configure chapter headings.
   set heading(numbering: (..nums) => {
@@ -883,69 +955,6 @@
       return [#nums.pos().map(str).join(".") #h(0.5em)]
     }
   })
-
-  let before_h1(it) = if it.numbering != none {
-    text()[
-      #numbering(it.numbering, ..counter(heading).at(it.location()))
-      #h(1em)
-    ]
-  }
-
-  show heading.where(level: 1): it => {
-    pagebreak()
-    counter(math.equation).update(0)
-    set text(
-      font: ("Times New Roman", "UDEV Gothic"),
-      size: font_sizes.at("h1"),
-    )
-    set block(spacing: 1.5em)
-    text(weight: "bold")[
-      #v(10pt)
-      #before_h1(it)
-      #linebreak()
-    ]
-    text(weight: "bold")[#it.body]
-  }
-
-  show heading.where(level: 2): it => block({
-    set text(
-      font: ("Times New Roman", "UDEV Gothic"),
-      weight: "medium",
-      size: font_sizes.at("h2"),
-    )
-    text()[#it]
-  })
-
-  show heading.where(level: 3): it => block({
-    set text(
-      font: ("Times New Roman", "UDEV Gothic"),
-      weight: "medium",
-      size: font_sizes.at("h3"),
-    )
-    text()[#it]
-  })
-
-  show heading.where(level: 4): it => block({
-    set text(
-      font: ("Times New Roman", "UDEV Gothic"),
-      weight: "bold",
-      size: font_sizes.at("under_h4"),
-    )
-    text()[#it.body]
-  })
-
-  show heading: it => (
-    {
-      set text(
-        font: ("Times New Roman", "UDEV Gothic"),
-        weight: "bold",
-        size: font_sizes.at("under_h4"),
-      )
-      set block(above: 2em, below: 1.5em)
-      it
-    }
-      + empty_par()
-  ) // 最初の段落のインデントを下げるためにダミーの段落を設置する
 
 
   // Start with a chapter outline.
@@ -960,17 +969,7 @@
     toc_table()
   }
 
-  // Start main pages.
-  set page(
-    header: custom_header(),
-    numbering: "1",
-  )
-
-  counter(page).update(1)
-
-  set math.equation(supplement: [式], numbering: equation_num)
-
-  body
+  main-chapter-pages(body)
 
   render_bibliography_if_needed()
 }
