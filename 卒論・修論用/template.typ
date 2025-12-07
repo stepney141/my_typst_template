@@ -500,6 +500,7 @@
 // Setting header
 // ref: https://stackoverflow.com/questions/76363935/typst-header-that-changes-from-page-to-page-based-on-state
 #let custom_header() = context [
+  #set par(first-line-indent: 0pt)
   #let i = counter(page).get().first()
   #let ht-first = state("page-first-section", [])
   #let ht-last = state("page-last-section", [])
@@ -562,6 +563,7 @@
 }
 
 #let show-bibliography-default(bibliography-file, bibliography-csl-path) = {
+  set par(first-line-indent: 0pt)
   show bibliography: set text(12pt)
   show heading.where(level: 1): it => {
     pagebreak()
@@ -608,6 +610,7 @@
 
 #let set_common_subheadings(body) = {
   show heading.where(level: 2): it => block({
+    set par(first-line-indent: 0pt)
     set text(
       font: section-fonts,
       weight: "regular",
@@ -617,6 +620,7 @@
   })
 
   show heading.where(level: 3): it => block({
+    set par(first-line-indent: 0pt)
     set text(
       font: section-fonts,
       weight: "regular",
@@ -626,6 +630,7 @@
   })
 
   show heading.where(level: 4): it => block({
+    set par(first-line-indent: 0pt)
     set text(
       font: section-fonts,
       weight: "semibold",
@@ -636,6 +641,7 @@
 
   show heading: it => (
     {
+      set par(first-line-indent: 0pt)
       set text(
         font: section-fonts,
         weight: "bold",
@@ -714,6 +720,7 @@
   }
 
   show heading.where(level: 1): it => {
+    set par(first-line-indent: 0pt)
     pagebreak()
     counter(math.equation).update(0)
     set text(
@@ -930,7 +937,6 @@
 
   // Configure paragraph properties.
   let par-distance = 0.9em
-  set par(leading: par-distance, spacing: par-distance, first-line-indent: 20pt, justify: true)
 
   // Start with a chapter outline.
   toc()
@@ -944,7 +950,16 @@
     toc_table()
   }
 
-  main-chapter-pages(body)
+  // 本文だけに段落設定を適用
+  context {
+    set par(
+      leading: par-distance,
+      spacing: par-distance,
+      first-line-indent: (all: true, amount: 20pt),
+      justify: true,
+    )
+    main-chapter-pages(body)
+  }
 
   render_bibliography_if_needed()
 }
