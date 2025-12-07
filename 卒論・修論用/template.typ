@@ -33,6 +33,30 @@
   "latest": (),
 ))
 
+// Track appendix mode and compute heading labels (used for headings, TOC, refs).
+#let appendix_mode = state("appendix-mode", false)
+
+#let heading_label(loc) = {
+  let vals = counter(heading).at(loc)
+  if vals.len() == 0 {
+    return none
+  }
+  if appendix_mode.at(loc) {
+    let letter = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".at(vals.at(0) - 1)
+    if vals.len() == 1 {
+      [付録 #letter]
+    } else {
+      [#(letter + "." + vals.slice(1).map(str).join(".")) #h(0.5em)]
+    }
+  } else {
+    if vals.len() == 1 {
+      [第#vals.first()章]
+    } else {
+      [#vals.map(str).join(".") #h(0.5em)]
+    }
+  }
+}
+
 // Setting theorem environment
 #let thmenv(identifier, base, base_level, fmt) = {
   let global_numbering = numbering
@@ -369,7 +393,8 @@
   context {
     let elements = query(heading.where(outlined: true))
     for el in elements {
-      let before_toc = query(heading.where(outlined: true).before(here())).find(one => { one.body == el.body }) != none
+      // Use roman numerals only for headings physically before the TOC call.
+      let before_toc = query(heading.where(outlined: true).before(here())).find(one => one == el) != none
       let page_num = if before_toc {
         numbering("i", counter(page).at(el.location()).first())
       } else {
@@ -377,9 +402,8 @@
       }
 
       link(el.location())[#{
-        // acknoledgement has no numbering
         let chapt_num = if el.numbering != none {
-          numbering(el.numbering, ..counter(heading).at(el.location()))
+          heading_label(el.location())
         } else { none }
 
         if el.level == 1 {
@@ -516,10 +540,8 @@
     if content.numbering == none {
       return none
     }
-    [
-      #numbering(content.numbering, ..counter(heading).at(content.location()))
-      #h(10pt)
-    ]
+    let label = heading_label(content.location())
+    if label == none { none } else { [#label #h(10pt)] }
   }
 
   // test if the find function returned none (i.e. no headings on this page)
@@ -616,7 +638,9 @@
       weight: "regular",
       size: font_sizes.at("h2"),
     )
-    text()[#it]
+    text()[
+      #heading_label(it.location()) #h(0.8em) #it.body
+    ]
   })
 
   show heading.where(level: 3): it => block({
@@ -626,7 +650,9 @@
       weight: "regular",
       size: font_sizes.at("h3"),
     )
-    text()[#it]
+    text()[
+      #heading_label(it.location()) #h(0.8em) #it.body
+    ]
   })
 
   show heading.where(level: 4): it => block({
@@ -636,7 +662,9 @@
       weight: "semibold",
       size: font_sizes.at("under_h4"),
     )
-    text()[#it.body]
+    text()[
+      #heading_label(it.location()) #h(0.6em) #it.body
+    ]
   })
 
   show heading: it => (
@@ -656,50 +684,33 @@
   body
 }
 
-#let appendix(body) = {
+#let appendix_setup() = context {
   render_bibliography_if_needed()
 
+  // Switch to appendix mode globally and restart heading/equation numbering.
+  appendix_mode.update(true)
   counter(heading).update(0)
-  counter("appendix").update(1)
+  counter(math.equation).update(0)
 
-  set heading(numbering: (..nums) => {
-    let vals = nums.pos()
-    let value = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".at(vals.at(0) - 1)
-    if vals.len() == 1 {
-      return [付録 #value]
-    } else {
-      return [#(value + "." + nums.pos().slice(1).map(str).join(".")) #h(0.5em)]
-    }
-  })
+  set page(header: custom_header(), numbering: "1")
+}
 
-  set page(
-    header: custom_header(),
-  )
+#let appendix(body) = {
+  appendix_setup()
+  [#body]
+}
 
-  let before_h1(it) = if it.numbering != none {
-    text()[
-      #v(10pt)
-      #numbering(it.numbering, ..counter(heading).at(it.location()))
-    ]
-  } else {
-    none
-  }
+// Start appendix mode from this point onward without needing a closing bracket.
+#let appendix_start() = {
+  appendix_setup()
+  none
+}
 
-  show heading.where(level: 1): it => {
-    pagebreak()
-    counter(math.equation).update(0)
-    set text(
-      font: section-fonts,
-      weight: "bold",
-      size: font_sizes.at("h1"),
-    )
-    set block(spacing: 1.5em)
-    text()[
-      #before_h1(it) #linebreak() #it.body #v(0pt)
-    ]
-  }
-
-  set_common_subheadings([#body])
+// Zero-width marker for the new syntax: write `#Appendix` (or `#Appendix[]`) where
+// the appendix should start. The old `#appendix[ ... ]` form still works.
+#let Appendix = {
+  appendix_start()
+  []
 }
 
 #let main-chapter-pages(body) = {
@@ -712,11 +723,11 @@
 
   set math.equation(supplement: [式], numbering: equation_num)
 
-  let before_h1(it) = if it.numbering != none {
-    text()[
-      #numbering(it.numbering, ..counter(heading).at(it.location()))
-      #h(1em)
-    ]
+  let before_h1(it) = {
+    let label = heading_label(it.location())
+    if label != none {
+      text()[#label #h(1em)]
+    }
   }
 
   show heading.where(level: 1): it => {
@@ -843,18 +854,7 @@
       ")"
     } else if it.element != none and it.element.func() == heading {
       let el = it.element
-      let loc = el.location()
-      let num = numbering(el.numbering, ..counter(heading).at(loc))
-      if el.level == 1 {
-        str(num)
-        "章"
-      } else if el.level == 2 {
-        str(num)
-        "節"
-      } else if el.level == 3 {
-        str(num)
-        "項"
-      }
+      heading_label(el.location())
     } else {
       it
     }
@@ -926,17 +926,9 @@
   // Show abstruct
   abstract_page(abstract_ja, abstract_en, keywords_ja: keywords_ja, keywords_en: keywords_en)
 
-  // Configure chapter headings.
-  set heading(numbering: (..nums) => {
-    if nums.pos().len() == 1 {
-      return [第#nums.pos().map(str).join(".")章]
-    } else {
-      return [#nums.pos().map(str).join(".") #h(0.5em)]
-    }
-  })
-
   // Configure paragraph properties.
   let par-distance = 0.9em
+  set heading(numbering: "1.")
 
   // Start with a chapter outline.
   toc()
