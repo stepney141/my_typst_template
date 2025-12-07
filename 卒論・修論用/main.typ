@@ -15,6 +15,8 @@
   ],
   keywords_ja: ("宇宙", "異常検知"),
   bibliography-file: "references.bib",
+  enable_toc_of_image: true,
+  enable_toc_of_table: true,
 )
 
 = 序論

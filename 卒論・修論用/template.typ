@@ -15,6 +15,18 @@
   normal: 17pt,
 )
 
+// Set fonts.
+// TeX Gyre Pagella is a free alternative to Palatino.
+#let body-fonts = ("Nimbus Roman", "Source Han Serif JP") // serif
+#let strong-fonts = ("Nimbus Roman", "IPAPGothic") // en: serif, ja: sans serif
+#let section-fonts = (
+  "BIZTER",
+  "Inter",
+  "Noto Sans Mono",
+  "UDEV Gothic 35JPDOC",
+) // sans serif
+#let title-fonts = ("Nimbus Roman", "UDEV Gothic 35JPDOC") // en: serif, ja: sans serif
+
 // Store theorem environment numbering
 #let thmcounters = state("thm", (
   "counters": ("heading": ()),
@@ -229,10 +241,7 @@
     show <_ja_abstract_>: {
       align(center)[
         #text(
-          font: (
-            "Times New Roman",
-            "IPAPGothic",
-          ),
+          font: section-fonts,
           size: 20pt,
           weight: "bold",
         )[
@@ -254,10 +263,7 @@
     if keywords_ja != () {
       par(first-line-indent: 0em)[
         #text(
-          font: (
-            "Times New Roman",
-            "Source Han Serif JP",
-          ),
+          font: body-fonts,
           weight: "bold",
           size: 12pt,
         )[
@@ -273,9 +279,7 @@
     show <_en_abstract_>: {
       align(center)[
         #text(
-          font: (
-            "Times New Roman"
-          ),
+          font: body-fonts,
           size: 18pt,
           "Abstruct",
         )
@@ -288,9 +292,7 @@
     abstract_en
     par(first-line-indent: 0em)[
       #text(
-        font: (
-          "Times New Roman"
-        ),
+        font: body-fonts,
         weight: "bold",
         size: 12pt,
       )[
@@ -319,10 +321,7 @@
 #let toc() = {
   align(center)[
     #text(
-      font: (
-        "Times New Roman",
-        "IPAPGothic",
-      ),
+      font: section-fonts,
       size: 20pt,
       weight: "bold",
     )[
@@ -352,18 +351,12 @@
 
         if el.level == 1 {
           set text(
-            font: (
-              "Times New Roman",
-              "UDEV Gothic",
-            ),
+            font: section-fonts,
             weight: "bold",
           )
           if chapt_num == none {} else {
             set text(
-              font: (
-                "Times New Roman",
-                "UDEV Gothic",
-              ),
+              font: section-fonts,
               weight: "bold",
             )
             chapt_num
@@ -373,10 +366,7 @@
           rebody
         } else if el.level == 2 {
           set text(
-            font: (
-              "Times New Roman",
-              "Source Han Serif JP",
-            ),
+            font: body-fonts,
             weight: "regular",
           )
           h(2em)
@@ -385,10 +375,7 @@
           rebody
         } else {
           set text(
-            font: (
-              "Times New Roman",
-              "Source Han Serif JP",
-            ),
+            font: body-fonts,
             weight: "regular",
           )
           h(4em)
@@ -408,10 +395,7 @@
 #let toc_image() = {
   align(center)[
     #text(
-      font: (
-        "Times New Roman",
-        "IPAPGothic",
-      ),
+      font: section-fonts,
       size: 20pt,
       weight: "bold",
     )[
@@ -445,10 +429,7 @@
 #let toc_table() = {
   align(center)[
     #text(
-      font: (
-        "Times New Roman",
-        "IPAPGothic",
-      ),
+      font: section-fonts,
       size: 20pt,
       weight: "bold",
     )[
@@ -553,7 +534,7 @@
     pagebreak()
     counter(math.equation).update(0)
     set text(
-      font: ("Times New Roman", "UDEV Gothic"),
+      font: section-fonts,
       size: font_sizes.at("h1"),
     )
     text(weight: "bold")[
@@ -582,6 +563,9 @@
     return none
   }
 
+  // Bibliography may be rendered outside appendix; ensure header & numbering stay in main style.
+  set page(header: custom_header(), numbering: "1")
+
   show-bibliography-default(config.at("file"), config.at("csl"))
   bibliography_state.update(conf => {
     conf.at("shown") = true
@@ -592,8 +576,8 @@
 #let set_common_subheadings(body) = {
   show heading.where(level: 2): it => block({
     set text(
-      font: ("Times New Roman", "UDEV Gothic"),
-      weight: "medium",
+      font: section-fonts,
+      weight: "regular",
       size: font_sizes.at("h2"),
     )
     text()[#it]
@@ -601,8 +585,8 @@
 
   show heading.where(level: 3): it => block({
     set text(
-      font: ("Times New Roman", "UDEV Gothic"),
-      weight: "medium",
+      font: section-fonts,
+      weight: "regular",
       size: font_sizes.at("h3"),
     )
     text()[#it]
@@ -610,7 +594,7 @@
 
   show heading.where(level: 4): it => block({
     set text(
-      font: ("Times New Roman", "UDEV Gothic"),
+      font: section-fonts,
       weight: "bold",
       size: font_sizes.at("under_h4"),
     )
@@ -620,7 +604,7 @@
   show heading: it => (
     {
       set text(
-        font: ("Times New Roman", "UDEV Gothic"),
+        font: section-fonts,
         weight: "bold",
         size: font_sizes.at("under_h4"),
       )
@@ -666,7 +650,7 @@
     pagebreak()
     counter(math.equation).update(0)
     set text(
-      font: ("Times New Roman", "UDEV Gothic"),
+      font: section-fonts,
       weight: "bold",
       size: font_sizes.at("h1"),
     )
@@ -700,7 +684,7 @@
     pagebreak()
     counter(math.equation).update(0)
     set text(
-      font: ("Times New Roman", "UDEV Gothic"),
+      font: section-fonts,
       size: font_sizes.at("h1"),
     )
     set block(spacing: 1.5em)
@@ -756,23 +740,18 @@
 
   configure_bibliography(bibliography-file, bibliography-csl-path)
 
-  // Set the body font. TeX Gyre Pagella is a free alternative
-  // to Palatino.
-  set text(
-    font: ("Times New Roman", "Source Han Serif JP"),
-    size: font_sizes.at("normal"),
-  )
-  show strong: set text(
-    font: ("Times New Roman", "IPAPGothic"),
-  )
+  // Set the body font.
+  set text(font: body-fonts, size: font_sizes.at("normal"))
+  show strong: set text(font: strong-fonts)
 
   // Set font size
   show footnote.entry: set text(10pt)
   show footnote: set text(15pt)
   show math.equation: set text(font_sizes.at("math"))
 
-  set list(indent: 10pt)
-  set enum(indent: 10pt)
+  set list(indent: 25pt)
+  set enum(indent: 25pt)
+  show list: set par(spacing: 2em)
 
   // Configure the page properties.
   set page(
@@ -892,19 +871,14 @@
 
   // The first page.
   align(center)[
-    #set text(
-      font: ("Times New Roman", "Source Han Serif JP"),
-    )
+    #set text(font: body-fonts)
 
     #v(80pt)
     #text(size: font_sizes_cover.at("normal"))[
       #class#paper-type
     ]
     #v(40pt)
-    #text(
-      font: ("Times New Roman", "UDEV Gothic"),
-      weight: "medium",
-    )[
+    #text(font: title-fonts, weight: "medium")[
       #text(size: font_sizes_cover.at("title"))[#title]
       #if subtitle != none {
         v(10pt)
@@ -950,7 +924,7 @@
   // Configure chapter headings.
   set heading(numbering: (..nums) => {
     if nums.pos().len() == 1 {
-      return [第 #nums.pos().map(str).join(".") 章]
+      return [第#nums.pos().map(str).join(".")章]
     } else {
       return [#nums.pos().map(str).join(".") #h(0.5em)]
     }
