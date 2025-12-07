@@ -62,24 +62,31 @@ $\
 #img(
   image("Figures/typst.svg", width: 20%),
   caption: [Typstのロゴ],
-) <img1>
+  label: <img1>,
+  placement: none, // LaTeXの \begin{figure}[H] に相当。auto に指定すると [tb] 相当の挙動になる
+)
 ```
 
 #img(
   image("Figures/typst.svg", width: 20%),
   caption: [Typstのロゴ],
-) <img1>
+  label: <img1>,
+  placement: none, // LaTeXの \begin{figure}[H] に相当。auto に指定すると [tb] 相当の挙動になる
+)
 
 @tbl1 はこんな感じ。
 
 ```typ
-#tbl(table(
+#tbl(
+  table(
     columns: 4,
     [t], [1], [2], [3],
     [y], [0.3s], [0.4s], [0.8s],
   ),
   caption: [テーブル @madje2022programmable],
-) <tbl1>
+  label: <tbl1>,
+  placement: none, // LaTeXの \begin{figure}[H] に相当。auto に指定すると [tb] 相当の挙動になる
+)
 ```
 
 #tbl(
@@ -89,7 +96,9 @@ $\
     [y], [0.3s], [0.4s], [0.8s],
   ),
   caption: [テーブル @madje2022programmable],
-) <tbl1>\
+  label: <tbl1>,
+  placement: none, // LaTeXの \begin{figure}[H] に相当。auto に指定すると [tb] 相当の挙動になる
+) \
 
 こんな感じで @ss8843592 or #cite(<ss8843592>) と引用できます。引用方式も数十種類の中から選べます。
 

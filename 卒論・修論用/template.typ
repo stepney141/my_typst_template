@@ -199,7 +199,7 @@
     let chapt = counter(heading).get().at(0)
     let c = counter("table-chapter" + str(chapt))
     let n = c.get().at(0)
-    str(chapt) + "." + str(n + 1)
+    str(chapt) + "." + str(n)
   }
 }
 
@@ -209,30 +209,63 @@
     let chapt = counter(heading).get().at(0)
     let c = counter("image-chapter" + str(chapt))
     let n = c.get().at(0)
-    str(chapt) + "." + str(n + 1)
+    str(chapt) + "." + str(n)
   }
 }
 
 // Definition of table format
-#let tbl(tbl, caption: "") = {
-  figure(
-    tbl,
-    caption: caption,
-    supplement: [表],
-    numbering: table_num,
-    kind: "table",
-  )
+#let tbl(tbl, caption: "", label: none, placement: auto) = {
+  context {
+    let chapt = counter(heading).get().at(0)
+    counter("table-chapter" + str(chapt)).step()
+    [
+      #set figure.caption(separator: [ --- ])
+      // To prevent page break between figure body and caption
+      // https://github.com/typst/typst/issues/5357
+      #show figure: it => {
+        set block(sticky: true)
+        it
+      }
+      // reference statements are unavailable with custom elements
+      // https://forum.typst.app/t/how-to-reference-styled-figures/5947
+      #figure(
+        tbl,
+        caption: caption,
+        supplement: [表],
+        numbering: table_num,
+        kind: "table",
+        placement: placement,
+      )#label
+    ]
+  }
 }
 
 // Definition of image format
-#let img(img, caption: "") = {
-  figure(
-    img,
-    caption: caption,
-    supplement: [図],
-    numbering: image_num,
-    kind: "image",
-  )
+#let img(img, caption: "", label: none, placement: auto) = {
+  context {
+    let chapt = counter(heading).get().at(0)
+    counter("image-chapter" + str(chapt)).step()
+
+    [
+      #set figure.caption(separator: [ --- ])
+      // To prevent page break between figure body and caption
+      // https://github.com/typst/typst/issues/5357
+      #show figure: it => {
+        set block(sticky: true)
+        it
+      }
+      // reference statements are unavailable with custom elements
+      // https://forum.typst.app/t/how-to-reference-styled-figures/5947
+      #figure(
+        img,
+        caption: caption,
+        supplement: [図],
+        numbering: image_num,
+        kind: "image",
+        placement: placement,
+      )#label
+    ]
+  }
 }
 
 // Definition of abstruct page
@@ -256,7 +289,7 @@
 
     // Configure paragraph properties.
     set text(size: 12pt)
-    set par(leading: 0.8em, first-line-indent: 20pt, justify: true)
+    set par(leading: 0.8em, first-line-indent: (all: true, amount: 20pt), justify: true)
     set par(spacing: 1.2em)
     abstract_ja
 
@@ -412,7 +445,7 @@
     for el in elements {
       let loc = el.location()
       let chapt = counter(heading).at(loc).at(0)
-      let num = counter(el.kind + "-chapter" + str(chapt)).at(loc).at(0) + 1
+      let num = counter(el.kind + "-chapter" + str(chapt)).at(loc).at(0)
       let page_num = counter(page).at(loc).first()
       let caption_body = to-string(el.caption.body)
       [図 #(str(chapt) + "." + str(num))]
@@ -445,7 +478,7 @@
     let elements = query(figure.where(outlined: true, kind: "table"))
     for el in elements {
       let chapt = counter(heading).at(el.location()).at(0)
-      let num = counter(el.kind + "-chapter" + str(chapt)).at(el.location()).at(0) + 1
+      let num = counter(el.kind + "-chapter" + str(chapt)).at(el.location()).at(0)
       let page_num = counter(page).at(el.location()).first()
       let caption_body = to-string(el.caption.body)
       [表 #(str(chapt) + "." + str(num))]
@@ -595,7 +628,7 @@
   show heading.where(level: 4): it => block({
     set text(
       font: section-fonts,
-      weight: "bold",
+      weight: "semibold",
       size: font_sizes.at("under_h4"),
     )
     text()[#it.body]
@@ -611,8 +644,8 @@
       set block(above: 2em, below: 1.5em)
       it
     }
-      + empty_par()
-  ) // 最初の段落のインデントを下げるためにダミーの段落を設置する
+    // + empty_par() // 最初の段落のインデントを下げるためにダミーの段落を設置する
+  )
 
   body
 }
@@ -688,12 +721,12 @@
       size: font_sizes.at("h1"),
     )
     set block(spacing: 1.5em)
-    text(weight: "bold")[
+    text(weight: "bold", size: font_sizes.h3)[
       #v(10pt)
       #before_h1(it)
       #linebreak()
     ]
-    text(weight: "bold")[
+    text(weight: "bold", size: font_sizes.h1 + 2pt)[
       #it.body
       #v(10pt)
     ]
@@ -773,7 +806,7 @@
 
       link(loc)[#if el.kind == "image" or el.kind == "table" {
           // counting
-          let num = counter(el.kind + "-chapter" + str(chapt)).at(loc).at(0) + 1
+          let num = counter(el.kind + "-chapter" + str(chapt)).at(loc).at(0)
           it.element.supplement
           " "
           str(chapt)
@@ -814,37 +847,6 @@
       } else if el.level == 3 {
         str(num)
         "項"
-      }
-    } else {
-      it
-    }
-  }
-
-  // counting caption number
-  show figure: it => {
-    set align(center)
-    if it.kind == "image" {
-      set text(size: 12pt)
-      it.body
-      it.supplement
-      " " + it.counter.display(it.numbering)
-      " " + it.caption.body
-      context {
-        let chapt = counter(heading).at(it.location()).at(0)
-        let c = counter("image-chapter" + str(chapt))
-        c.step()
-      }
-    } else if it.kind == "table" {
-      set text(size: 12pt)
-      it.supplement
-      " " + it.counter.display(it.numbering)
-      " " + it.caption.body
-      set text(size: 10.5pt)
-      it.body
-      context {
-        let chapt = counter(heading).at(it.location()).at(0)
-        let c = counter("table-chapter" + str(chapt))
-        c.step()
       }
     } else {
       it
@@ -917,10 +919,6 @@
   // Show abstruct
   abstract_page(abstract_ja, abstract_en, keywords_ja: keywords_ja, keywords_en: keywords_en)
 
-  // Configure paragraph properties.
-  let par-distance = 0.9em
-  set par(leading: par-distance, spacing: par-distance, first-line-indent: 20pt, justify: true)
-
   // Configure chapter headings.
   set heading(numbering: (..nums) => {
     if nums.pos().len() == 1 {
@@ -930,6 +928,9 @@
     }
   })
 
+  // Configure paragraph properties.
+  let par-distance = 0.9em
+  set par(leading: par-distance, spacing: par-distance, first-line-indent: 20pt, justify: true)
 
   // Start with a chapter outline.
   toc()
