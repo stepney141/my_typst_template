@@ -15,16 +15,14 @@
   normal: 17pt,
 )
 
+// Configure paragraph properties.
+#let par-distance = 0.9em
+
 // Set fonts.
 // TeX Gyre Pagella is a free alternative to Palatino.
 #let body-fonts = ("Nimbus Roman", "Source Han Serif JP") // serif
 #let strong-fonts = ("Nimbus Roman", "IPAPGothic") // en: serif, ja: sans serif
-#let section-fonts = (
-  "BIZTER",
-  "Inter",
-  "Noto Sans Mono",
-  "UDEV Gothic 35JPDOC",
-) // sans serif
+#let section-fonts = ("Inter", "UDEV Gothic 35JPDOC") // sans serif
 #let title-fonts = ("Nimbus Roman", "UDEV Gothic 35JPDOC") // en: serif, ja: sans serif
 
 // Store theorem environment numbering
@@ -52,7 +50,7 @@
     if vals.len() == 1 {
       [第#vals.first()章]
     } else {
-      [#vals.map(str).join(".") #h(0.5em)]
+      [#vals.map(str).join(".") #h(0.1em)]
     }
   }
 }
@@ -207,6 +205,13 @@
   titlefmt: emph,
 )
 
+#let definition = thmbox(
+  "definition", //identifier
+  "定義",
+  base_level: 1,
+  // stroke: black + 1pt,
+)
+
 // Counting equation number
 #let equation_num(_) = {
   context {
@@ -243,7 +248,7 @@
     let chapt = counter(heading).get().at(0)
     counter("table-chapter" + str(chapt)).step()
     [
-      #set figure.caption(separator: [ --- ])
+      #set figure.caption(separator: [ -- ])
       // To prevent page break between figure body and caption
       // https://github.com/typst/typst/issues/5357
       #show figure: it => {
@@ -271,7 +276,7 @@
     counter("image-chapter" + str(chapt)).step()
 
     [
-      #set figure.caption(separator: [ --- ])
+      #set figure.caption(separator: [ -- ])
       // To prevent page break between figure body and caption
       // https://github.com/typst/typst/issues/5357
       #show figure: it => {
@@ -409,13 +414,9 @@
         if el.level == 1 {
           set text(
             font: section-fonts,
-            weight: "bold",
+            weight: "regular",
           )
           if chapt_num == none {} else {
-            set text(
-              font: section-fonts,
-              weight: "bold",
-            )
             chapt_num
             h(1em)
           }
@@ -426,19 +427,23 @@
             font: body-fonts,
             weight: "regular",
           )
-          h(2em)
+          h(1.5em)
           chapt_num
+          h(0.5em)
           let rebody = to-string(el.body)
           rebody
-        } else {
+        } else if el.level == 3 {
           set text(
             font: body-fonts,
             weight: "regular",
           )
-          h(4em)
+          h(3em)
           chapt_num
+          h(0.5em)
           let rebody = to-string(el.body)
           rebody
+        } else {
+          continue
         }
       }]
       box(width: 1fr, h(0.5em) + box(width: 1fr, repeat[.]) + h(0.5em))
@@ -515,12 +520,6 @@
   }
 }
 
-// Setting empty par
-#let empty_par() = {
-  v(-1em)
-  box()
-}
-
 // Setting header
 // ref: https://stackoverflow.com/questions/76363935/typst-header-that-changes-from-page-to-page-based-on-state
 #let custom_header() = context [
@@ -585,7 +584,13 @@
 }
 
 #let show-bibliography-default(bibliography-file, bibliography-csl-path) = {
-  set par(first-line-indent: 0pt)
+  set par(
+    leading: par-distance,
+    spacing: par-distance,
+    first-line-indent: 0pt,
+    justify: true,
+  )
+
   show bibliography: set text(12pt)
   show heading.where(level: 1): it => {
     pagebreak()
@@ -635,11 +640,12 @@
     set par(first-line-indent: 0pt)
     set text(
       font: section-fonts,
-      weight: "regular",
       size: font_sizes.at("h2"),
     )
-    text()[
-      #heading_label(it.location()) #h(0.8em) #it.body
+    [
+      #text(weight: "semibold")[#heading_label(it.location())]
+      #h(0.8em)
+      #text(weight: "regular")[ #it.body ]
     ]
   })
 
@@ -659,11 +665,11 @@
     set par(first-line-indent: 0pt)
     set text(
       font: section-fonts,
-      weight: "semibold",
+      weight: "regular",
       size: font_sizes.at("under_h4"),
     )
     text()[
-      #heading_label(it.location()) #h(0.6em) #it.body
+      #it.body
     ]
   })
 
@@ -672,13 +678,12 @@
       set par(first-line-indent: 0pt)
       set text(
         font: section-fonts,
-        weight: "bold",
+        weight: "regular",
         size: font_sizes.at("under_h4"),
       )
       set block(above: 2em, below: 1.5em)
       it
     }
-    // + empty_par() // 最初の段落のインデントを下げるためにダミーの段落を設置する
   )
 
   body
@@ -739,7 +744,7 @@
       size: font_sizes.at("h1"),
     )
     set block(spacing: 1.5em)
-    text(weight: "bold", size: font_sizes.h3)[
+    text(weight: "bold", size: font_sizes.h2)[
       #v(10pt)
       #before_h1(it)
       #linebreak()
@@ -795,14 +800,28 @@
   set text(font: body-fonts, size: font_sizes.at("normal"))
   show strong: set text(font: strong-fonts)
 
-  // Set font size
-  show footnote.entry: set text(10pt)
+  // Set font size.
   show footnote: set text(15pt)
+  show footnote.entry: set text(size: 10pt)
   show math.equation: set text(font_sizes.at("math"))
 
+  // Set indents.
   set list(indent: 25pt)
   set enum(indent: 25pt)
   show list: set par(spacing: 2em)
+  show math.equation.where(block: true): set par(spacing: 1.5em)
+
+  // https://github.com/typst/typst/discussions/4448?utm_source=chatgpt.com#discussioncomment-9913935
+  show footnote: it => {
+    let num = numbering(it.numbering, ..counter(footnote).at(here()))
+    box(width: measure[1].width, super(num))
+  }
+  show footnote.entry: it => {
+    set par(justify: false)
+    let loc = it.note.location()
+    let num = numbering("注1.", ..counter(footnote).at(loc))
+    [#h(1em) #num #it.note.body]
+  }
 
   // Configure the page properties.
   set page(
@@ -926,8 +945,6 @@
   // Show abstruct
   abstract_page(abstract_ja, abstract_en, keywords_ja: keywords_ja, keywords_en: keywords_en)
 
-  // Configure paragraph properties.
-  let par-distance = 0.9em
   set heading(numbering: "1.")
 
   // Start with a chapter outline.
