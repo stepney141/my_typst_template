@@ -31,15 +31,19 @@
   "latest": (),
 ))
 
-// Track appendix mode and compute heading labels (used for headings, TOC, refs).
-#let appendix_mode = state("appendix-mode", false)
+// Track prefix mode for chapter headings (used for headings, TOC, refs).
+// Values: "main" | "appendix" | "none"
+#let prefix_mode = state("prefix-mode", "main")
 
 #let heading_label(loc) = {
   let vals = counter(heading).at(loc)
   if vals.len() == 0 {
     return none
   }
-  if appendix_mode.at(loc) {
+  let mode = prefix_mode.at(loc)
+  if mode == "none" {
+    return none
+  } else if mode == "appendix" {
     let letter = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".at(vals.at(0) - 1)
     if vals.len() == 1 {
       [付録 #letter]
@@ -276,7 +280,8 @@
     counter("image-chapter" + str(chapt)).step()
 
     [
-      #set figure.caption(separator: [ -- ])
+      #show figure: set par(spacing: 2em)
+      #set figure.caption(separator: [ --- ])
       // To prevent page break between figure body and caption
       // https://github.com/typst/typst/issues/5357
       #show figure: it => {
@@ -584,6 +589,8 @@
 }
 
 #let show-bibliography-default(bibliography-file, bibliography-csl-path) = {
+  // Bibliography headings should have no chapter prefix.
+  prefix_mode.update("none")
   set par(
     leading: par-distance,
     spacing: par-distance,
@@ -693,7 +700,7 @@
   render_bibliography_if_needed()
 
   // Switch to appendix mode globally and restart heading/equation numbering.
-  appendix_mode.update(true)
+  prefix_mode.update("appendix")
   counter(heading).update(0)
   counter(math.equation).update(0)
 
@@ -744,10 +751,10 @@
       size: font_sizes.at("h1"),
     )
     set block(spacing: 1.5em)
+    let label = before_h1(it)
     text(weight: "bold", size: font_sizes.h2)[
       #v(10pt)
-      #before_h1(it)
-      #linebreak()
+      #if label != none { label + linebreak() }
     ]
     text(weight: "bold", size: font_sizes.h1 + 2pt)[
       #it.body
