@@ -1,4 +1,5 @@
 #import "./template.typ": *
+
 #show: master_thesis.with(
   title: "Typstで書く修論のテンプレ",
   subtitle: "(An Example of a Master Thesis in Typst)",
@@ -14,14 +15,14 @@
     近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい.
   ],
   keywords_ja: ("宇宙", "異常検知"),
-  bibliography-file: "references.bib",
+  bibliography: (file: "references.bib"),
   enable_toc_of_image: true,
   enable_toc_of_table: true,
 )
 
 = 序論
 
-Typst @madje2022programmable は、Markdownのような分かりやすい記法で、PDF文書・ポスター・スライド等の各種ドキュメントを簡単に作成できます。Rust言語で書かれており、#LATEX に比べてコンパイルが極めて高速なのが特長です.
+Typst #cite(<madje2022programmable>) は、Markdownのような分かりやすい記法で、PDF文書・ポスター・スライド等の各種ドキュメントを簡単に作成できます。Rust言語で書かれており、#LATEX に比べてコンパイルが極めて高速なのが特長です.
 
 == Typstは優秀だ
 
@@ -83,7 +84,7 @@ $\
     [t], [1], [2], [3],
     [y], [0.3s], [0.4s], [0.8s],
   ),
-  caption: [テーブル @madje2022programmable],
+  caption: [テーブル #cite(<madje2022programmable>)],
   label: <tbl1>,
   placement: none, // LaTeXの \begin{figure}[H] に相当。auto に指定すると [tb] 相当の挙動になる
 )
@@ -95,15 +96,15 @@ $\
     [t], [1], [2], [3],
     [y], [0.3s], [0.4s], [0.8s],
   ),
-  caption: [テーブル @madje2022programmable],
+  caption: [テーブル #cite(<madje2022programmable>)],
   label: <tbl1>,
   placement: none, // LaTeXの \begin{figure}[H] に相当。auto に指定すると [tb] 相当の挙動になる
 ) \
 
-こんな感じで @ss8843592 or #cite(<ss8843592>) と引用できます。引用方式も数十種類の中から選べます。
+こんな感じで #cite(<ss8843592>) と引用できます。引用方式も数十種類の中から選べます。
 
 ```typ
-こんな感じで @ss8843592 or #cite(<ss8843592>) と引用できます。
+こんな感じで #cite(<ss8843592>) と引用できます。
 ```
 
 また、文中に簡単なプログラムを直接埋め込むことも可能です（コンパイル時に評価されて計算結果がテキストに変換される）。
@@ -113,7 +114,7 @@ $\
 #LATEX は世界中のユーザによる膨大な資産と、長年かけて築いてきた圧倒的なシェアがあるため、すぐにTypstに取って代わることはないでしょう。しかし講義ノート・卒論/修論・学会の予稿等の作成などの場面では、少しずつ Typst に置き換わっていくでしょう（願望）。
 #img(
   image("Figures/typst-github.svg", width: 20%),
-  caption: [Typst + git @madje2022programmable],
+  caption: [Typst + git #cite(<madje2022programmable>)],
 ) <img2>
 
 == グラフィックスも色々できるよ

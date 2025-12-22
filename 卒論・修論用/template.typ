@@ -641,7 +641,7 @@
 #let bibliography_state = state("bibliography-state", (
   "file": none,
   "csl": none,
-  "style": none,
+  "style": "hayagriva",
   "shown": false,
 ))
 
@@ -649,14 +649,14 @@
   bibliography_state.update(_ => (
     "file": config.at("file", default: none),
     "csl": config.at("csl", default: none),
-    "style": config.at("style", default: none),
+    "style": config.at("style", default: "hayagriva"),
     "shown": false,
   ))
 }
 
 // Route citations to the correct backend (hayagriva or pergamon) while allowing string keys everywhere.
 #let cite(..args) = context {
-  let style = bibliography_state.get().at("style", default: none)
+  let style = bibliography_state.get().at("style", default: "hayagriva")
   let pos = args.pos()
   let named = args.named()
 
@@ -757,7 +757,7 @@
   set page(header: custom_header(), numbering: "1")
 
   let bibfile = config.at("file")
-  let bibstyle = config.at("style", default: none)
+  let bibstyle = config.at("style", default: "hayagriva")
   if bibstyle == "hayagriva" {
     show-bibliography-hayagriva(bibfile, config.at("csl"))
   } else if bibstyle == "pergamon" {
@@ -933,7 +933,7 @@
 
   configure_bibliography(bibliography)
   let bibliography_file = bibliography.at("file", default: none)
-  let bibliography_style = bibliography.at("style", default: none)
+  let bibliography_style = bibliography.at("style", default: "hayagriva")
 
   // Set the body font.
   set text(font: body-fonts, size: font_sizes.at("normal"))
