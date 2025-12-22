@@ -1,5 +1,69 @@
 // https://github.com/ut-khanlab/master_thesis_template_for_typst
 
+// Keep Typst's default cite for Hayagriva; route through a wrapper based on bibliography style.
+#let typst-cite = cite
+#import "@preview/pergamon:0.6.0": *
+// Hooked cite by Pergamon
+#let pergamon-cite = cite
+
+// Settings for Pergamon
+#let pergamon_style = format-citation-numeric()
+#let is_ja = reference => {
+  let lang = reference.fields.at("language", default: none)
+  lang != none and (lang == "ja" or lang == "ja-JP" or lang == "japanese" or lang == "jp")
+}
+#let format_reference_en = format-reference(
+  reference-label: pergamon_style.reference-label,
+  print-url: true,
+  suppress-fields: ("language",),
+  bibstring: ("in": none),
+)
+#let format_reference_ja = format-reference(
+  reference-label: pergamon_style.reference-label,
+  name-format: "{family}{given}",
+  list-end-delim-two: "、",
+  list-end-delim-many: "、",
+  format-fields: (
+    // 日本語文献に`translator`の指定があるなら{訳者名}(訳)とする
+    "parsed-translator": (dffmt, value, reference, field, options, style) => {
+      if value == none {
+        none
+      } else {
+        let names = value.map(d => format-name(d, name-type: "translator", format: options.at("name-format")))
+        let joined = concatenate-names(names, options: options, minnames: options.minnames, maxnames: options.maxnames)
+        [#joined (訳)]
+      }
+    },
+    // 日本語文献に`editor`の指定があるなら{編者名}(編)とする
+    "parsed-editor": (dffmt, value, reference, field, options, style) => {
+      if value == none {
+        none
+      } else {
+        let names = value.map(d => format-name(d, name-type: "editor", format: options.at("name-format")))
+        let joined = concatenate-names(names, options: options, minnames: options.minnames, maxnames: options.maxnames)
+        [#joined (編)]
+      }
+    },
+  ),
+  format-journaltitle: it => it,
+  format-issuetitle: it => it,
+  format-maintitle: it => it,
+  format-booktitle: it => it,
+  print-url: true,
+  suppress-fields: ("language",),
+  bibstring: (
+    "in": none,
+    "editor": none,
+  ),
+)
+#let format_reference_by_lang = (index, reference) => {
+  if is_ja(reference) {
+    format_reference_ja(index, reference)
+  } else {
+    format_reference_en(index, reference)
+  }
+}
+
 // Set font sizes
 #let font_sizes = (
   h1: 18pt,
@@ -577,18 +641,43 @@
 #let bibliography_state = state("bibliography-state", (
   "file": none,
   "csl": none,
+  "style": none,
   "shown": false,
 ))
 
-#let configure_bibliography(file, csl) = {
+#let configure_bibliography(config) = {
   bibliography_state.update(_ => (
-    "file": file,
-    "csl": csl,
+    "file": config.at("file", default: none),
+    "csl": config.at("csl", default: none),
+    "style": config.at("style", default: none),
     "shown": false,
   ))
 }
 
-#let show-bibliography-default(bibliography-file, bibliography-csl-path) = {
+// Route citations to the correct backend (hayagriva or pergamon) while allowing string keys everywhere.
+#let cite(..args) = context {
+  let style = bibliography_state.get().at("style", default: none)
+  let pos = args.pos()
+  let named = args.named()
+
+  if style == "pergamon" {
+    let keys = pos.map(k => if type(k) == str { k } else { str(k) })
+    pergamon-cite(..keys, ..named)
+  } else {
+    let keys = pos.map(k => if type(k) == str { label(k) } else { k })
+    let cites = keys.map(k => typst-cite(k))
+    if cites.len() == 0 {
+      none
+    } else if cites.len() == 1 {
+      cites.first()
+    } else {
+      // Adjacent citations are grouped by Typst; join with a space.
+      cites.join([ ])
+    }
+  }
+}
+
+#let show-bibliography-hayagriva(bibfile, csl) = {
   // Bibliography headings should have no chapter prefix.
   prefix_mode.update("none")
   set par(
@@ -615,14 +704,46 @@
   heading(level: 1, numbering: none)[参考文献]
 
   bibliography(
-    bibliography-file,
+    bibfile,
     title: none,
     full: true,
-    style: if bibliography-csl-path != none {
-      bibliography-csl-path
+    style: if csl != none {
+      csl
     } else {
       "ieee"
     },
+  )
+}
+
+#let show-bibliography-pergamon(bibliography-file) = {
+  prefix_mode.update("none")
+  set par(
+    leading: par-distance,
+    spacing: par-distance,
+    first-line-indent: 0pt,
+    justify: true,
+  )
+
+  show bibliography: set text(12pt)
+  show heading.where(level: 1): it => {
+    pagebreak()
+    counter(math.equation).update(0)
+    set text(
+      font: section-fonts,
+      size: font_sizes.at("h1"),
+    )
+    text(weight: "bold")[
+      #v(0.5em)
+      #it.body
+      #v(0.5em)
+    ]
+  }
+
+  print-bibliography(
+    format-reference: format_reference_by_lang,
+    label-generator: pergamon_style.label-generator,
+    sorting: reference => reference.fields.at("sortkey", default: reference.entry_key),
+    title: "参考文献",
   )
 }
 
@@ -635,7 +756,13 @@
   // Bibliography may be rendered outside appendix; ensure header & numbering stay in main style.
   set page(header: custom_header(), numbering: "1")
 
-  show-bibliography-default(config.at("file"), config.at("csl"))
+  let bibfile = config.at("file")
+  let bibstyle = config.at("style", default: none)
+  if bibstyle == "hayagriva" {
+    show-bibliography-hayagriva(bibfile, config.at("csl"))
+  } else if bibstyle == "pergamon" {
+    show-bibliography-pergamon(bibfile)
+  }
   bibliography_state.update(conf => {
     conf.at("shown") = true
     conf
@@ -791,8 +918,11 @@
   // The paper size to use.
   paper-size: "a4",
   // The path to a bibliography file if you want to cite some external works.
-  bibliography-file: none,
-  bibliography-csl-path: none,
+  bibliography: (
+    file: none,
+    style: "hayagriva", // "hayagriva" or "pergamon"
+    csl: none,
+  ),
   enable_toc_of_image: false,
   enable_toc_of_table: false,
   // The paper's content.
@@ -801,7 +931,9 @@
   // Set the document's metadata.
   set document(title: title, author: author)
 
-  configure_bibliography(bibliography-file, bibliography-csl-path)
+  configure_bibliography(bibliography)
+  let bibliography_file = bibliography.at("file", default: none)
+  let bibliography_style = bibliography.at("style", default: none)
 
   // Set the body font.
   set text(font: body-fonts, size: font_sizes.at("normal"))
@@ -966,18 +1098,39 @@
     toc_table()
   }
 
-  // 本文だけに段落設定を適用
-  context {
-    set par(
-      leading: par-distance,
-      spacing: par-distance,
-      first-line-indent: (all: true, amount: 20pt),
-      justify: true,
-    )
-    main-chapter-pages(body)
-  }
+  if bibliography_file != none and bibliography_style == "pergamon" {
+    add-bib-resource(read(bibliography_file))
 
-  render_bibliography_if_needed()
+    refsection(format-citation: pergamon_style.format-citation)[
+      // 本文だけに段落設定を適用
+      #context {
+        set par(
+          leading: par-distance,
+          spacing: par-distance,
+          first-line-indent: (all: true, amount: 20pt),
+          justify: true,
+        )
+        main-chapter-pages(body)
+      }
+
+      #render_bibliography_if_needed()
+    ]
+  } else {
+    // 本文だけに段落設定を適用
+    context {
+      set par(
+        leading: par-distance,
+        spacing: par-distance,
+        first-line-indent: (all: true, amount: 20pt),
+        justify: true,
+      )
+      main-chapter-pages(body)
+    }
+
+    if bibliography_file != none and bibliography_style == "hayagriva" {
+      render_bibliography_if_needed()
+    }
+  }
 }
 
 // LATEX character
