@@ -81,6 +81,11 @@
 
 // Configure paragraph properties.
 #let par-distance = 0.9em
+// 字下げ; 日本語は1文字分
+#let firstline-indent = (
+  ja: 1em,
+  en: 20pt,
+)
 
 // Set fonts.
 // TeX Gyre Pagella is a free alternative to Palatino.
@@ -120,6 +125,41 @@
     } else {
       [#vals.map(str).join(".") #h(0.1em)]
     }
+  }
+}
+
+// Chapter prefix for numbering (e.g. "1" in main, "A" in appendix).
+#let chapter_prefix(loc) = {
+  let vals = counter(heading).at(loc)
+  if vals.len() == 0 {
+    return "0"
+  }
+  let head = vals.at(0)
+  let mode = prefix_mode.at(loc)
+  if mode == "appendix" {
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ".at(head - 1)
+  } else {
+    str(head)
+  }
+}
+
+// Format theorem numbers with appendix-aware chapter prefix.
+#let thm_numbering(numbering_spec, nums, loc) = {
+  if numbering_spec == none {
+    return none
+  }
+  if prefix_mode.at(loc) == "appendix" {
+    if nums.len() == 0 {
+      return none
+    }
+    let head = chapter_prefix(loc)
+    if nums.len() == 1 {
+      head
+    } else {
+      head + "." + nums.slice(1).map(str).join(".")
+    }
+  } else {
+    numbering(numbering_spec, ..nums)
   }
 }
 
@@ -193,7 +233,8 @@
       }
 
       number = context {
-        global_numbering(numbering, ..thmcounters.get().at("latest"))
+        let nums = thmcounters.get().at("latest")
+        thm_numbering(numbering, nums, here())
       }
     }
 
@@ -242,6 +283,7 @@
     }
     title = titlefmt(title)
     body = bodyfmt(body)
+    set par(first-line-indent: 0pt)
     pad(
       ..padding,
       block(
@@ -271,19 +313,58 @@
   inset: (top: 0em, left: 1.2em, right: 1.2em),
   namefmt: name => emph([(#name)]),
   titlefmt: emph,
+  bodyfmt: body => {
+    // fix indents in the theorems
+    set list(indent: 10pt)
+    set enum(indent: 10pt)
+    body
+  },
 )
 
-#let definition = thmbox(
+#let definition = thmplain(
   "definition", //identifier
   "定義",
   base_level: 1,
   // stroke: black + 1pt,
+  titlefmt: strong,
+  namefmt: name => [(#name)],
+  // inset: (left: 20pt, right: 0em),
+  padding: (top: 0.5em, bottom: 1em),
+)
+
+#let theorem = thmplain(
+  "theorem", //identifier
+  "定理",
+  titlefmt: strong,
+  base_level: 1,
+  // inset: (left: 20pt, right: 0em),
+  padding: (top: 0.5em),
+)
+
+#let lemma = thmplain(
+  "lemma", //identifier
+  "補題",
+  titlefmt: strong,
+  base_level: 1,
+  // inset: (left: 20pt, right: 0em),
+  padding: (top: 0.5em),
+)
+
+#let proof = thmplain(
+  "proof", // identifier
+  "証明",
+  titlefmt: strong,
+  base_level: 1,
+  // inset: (left: 20pt, right: 0em),
+  padding: (bottom: 0.5em),
+).with(
+  numbering: none,
 )
 
 // Counting equation number
 #let equation_num(_) = {
   context {
-    let chapt = counter(heading).get().at(0)
+    let chapt = chapter_prefix(here())
     let c = counter(math.equation)
     let n = c.get().at(0)
     "(" + str(chapt) + "." + str(n) + ")"
@@ -293,38 +374,78 @@
 // Counting table number
 #let table_num(_) = {
   context {
-    let chapt = counter(heading).get().at(0)
-    let c = counter("table-chapter" + str(chapt))
+    let chapt = chapter_prefix(here())
+    let c = counter("table-chapter" + chapt)
     let n = c.get().at(0)
-    str(chapt) + "." + str(n)
+    chapt + "." + str(n)
   }
 }
 
 // Counting image number
 #let image_num(_) = {
   context {
-    let chapt = counter(heading).get().at(0)
-    let c = counter("image-chapter" + str(chapt))
+    let chapt = chapter_prefix(here())
+    let c = counter("image-chapter" + chapt)
     let n = c.get().at(0)
-    str(chapt) + "." + str(n)
+    chapt + "." + str(n)
+  }
+}
+
+#let gap_between_figures = 1.5em
+
+// Definition of image format
+#let img(img, caption: "", label: none, placement: auto, gap: 1em) = {
+  context {
+    let chapt = chapter_prefix(here())
+    counter("image-chapter" + chapt).step()
+
+    set figure.caption(separator: [ ^---^ ])
+    // To prevent page break between figure body and caption
+    // https://github.com/typst/typst/issues/5357
+    show figure: it => {
+      set block(sticky: true)
+      it
+    }
+
+    // reference statements are unavailable with custom elements
+    // https://forum.typst.app/t/how-to-reference-styled-figures/5947
+    let fig-body = [
+      #figure(
+        img,
+        caption: caption,
+        supplement: [図],
+        numbering: image_num,
+        kind: "image",
+        placement: none,
+        gap: gap,
+      )#label
+    ]
+    let fig_block = block(width: 100%)[
+      #align(center)[#fig-body]
+    ]
+
+    if placement == none {
+      block(above: gap_between_figures, below: gap_between_figures)[#fig_block]
+    } else {
+      place(placement, float: true, clearance: gap_between_figures)[#fig_block]
+    }
   }
 }
 
 // Definition of table format
 #let tbl(tbl, caption: "", label: none, placement: auto) = {
   context {
-    let chapt = counter(heading).get().at(0)
-    counter("table-chapter" + str(chapt)).step()
-    [
-      #set figure.caption(separator: [ -- ])
-      // To prevent page break between figure body and caption
-      // https://github.com/typst/typst/issues/5357
-      #show figure: it => {
-        set block(sticky: true)
-        it
-      }
-      // reference statements are unavailable with custom elements
-      // https://forum.typst.app/t/how-to-reference-styled-figures/5947
+    let chapt = chapter_prefix(here())
+    counter("table-chapter" + chapt).step()
+
+    set figure.caption(separator: [ ^---^ ])
+    // To prevent page break between figure body and caption
+    // https://github.com/typst/typst/issues/5357
+    show figure: it => {
+      set block(sticky: true)
+      it
+    }
+    let tbl-body = [
       #figure(
         tbl,
         caption: caption,
@@ -332,37 +453,19 @@
         numbering: table_num,
         kind: "table",
         placement: placement,
+        gap: 1em,
       )#label
     ]
-  }
-}
 
-// Definition of image format
-#let img(img, caption: "", label: none, placement: auto) = {
-  context {
-    let chapt = counter(heading).get().at(0)
-    counter("image-chapter" + str(chapt)).step()
-
-    [
-      #show figure: set par(spacing: 2em)
-      #set figure.caption(separator: [ --- ])
-      // To prevent page break between figure body and caption
-      // https://github.com/typst/typst/issues/5357
-      #show figure: it => {
-        set block(sticky: true)
-        it
-      }
-      // reference statements are unavailable with custom elements
-      // https://forum.typst.app/t/how-to-reference-styled-figures/5947
-      #figure(
-        img,
-        caption: caption,
-        supplement: [図],
-        numbering: image_num,
-        kind: "image",
-        placement: placement,
-      )#label
+    let tbl_block = block(width: 100%)[
+      #align(center)[#tbl-body]
     ]
+
+    if placement == none {
+      block(above: gap_between_figures, below: gap_between_figures)[#tbl_block]
+    } else {
+      place(placement, float: true, clearance: gap_between_figures)[#tbl_block]
+    }
   }
 }
 
@@ -387,7 +490,7 @@
 
     // Configure paragraph properties.
     set text(size: 12pt)
-    set par(leading: 0.8em, first-line-indent: (all: true, amount: 20pt), justify: true)
+    set par(leading: 0.8em, first-line-indent: (all: true, amount: firstline-indent.ja), justify: true)
     set par(spacing: 1.2em)
     abstract_ja
 
@@ -485,6 +588,7 @@
             font: section-fonts,
             weight: "regular",
           )
+          v(0.5em)
           if chapt_num == none {} else {
             chapt_num
             h(1em)
@@ -542,11 +646,11 @@
     let elements = query(figure.where(outlined: true, kind: "image"))
     for el in elements {
       let loc = el.location()
-      let chapt = counter(heading).at(loc).at(0)
-      let num = counter(el.kind + "-chapter" + str(chapt)).at(loc).at(0)
+      let chapt = chapter_prefix(loc)
+      let num = counter(el.kind + "-chapter" + chapt).at(loc).at(0)
       let page_num = counter(page).at(loc).first()
       let caption_body = to-string(el.caption.body)
-      [図 #(str(chapt) + "." + str(num))]
+      [図 #(chapt + "." + str(num))]
       h(1em)
       caption_body
       box(width: 1fr, h(0.5em) + box(width: 1fr, repeat[.]) + h(0.5em))
@@ -575,11 +679,12 @@
   context {
     let elements = query(figure.where(outlined: true, kind: "table"))
     for el in elements {
-      let chapt = counter(heading).at(el.location()).at(0)
-      let num = counter(el.kind + "-chapter" + str(chapt)).at(el.location()).at(0)
+      let loc = el.location()
+      let chapt = chapter_prefix(loc)
+      let num = counter(el.kind + "-chapter" + chapt).at(loc).at(0)
       let page_num = counter(page).at(el.location()).first()
       let caption_body = to-string(el.caption.body)
-      [表 #(str(chapt) + "." + str(num))]
+      [表 #(chapt + "." + str(num))]
       h(1em)
       caption_body
       box(width: 1fr, h(0.5em) + box(width: 1fr, repeat[.]) + h(0.5em))
@@ -696,7 +801,7 @@
       size: font_sizes.at("h1"),
     )
     text(weight: "bold")[
-      #v(0.5em)
+      #v(0.2em)
       #it.body
       #v(0.5em)
     ]
@@ -706,7 +811,7 @@
   bibliography(
     bibfile,
     title: none,
-    full: true,
+    // full: true,
     style: if csl != none {
       csl
     } else {
@@ -877,15 +982,15 @@
       font: section-fonts,
       size: font_sizes.at("h1"),
     )
-    set block(spacing: 1.5em)
+    set block(spacing: 0.5em)
     let label = before_h1(it)
     text(weight: "bold", size: font_sizes.h2)[
-      #v(10pt)
+      #v(0.5em)
       #if label != none { label + linebreak() }
     ]
     text(weight: "bold", size: font_sizes.h1 + 2pt)[
       #it.body
-      #v(10pt)
+      #v(0.5em)
     ]
   }
 
@@ -940,7 +1045,7 @@
   show strong: set text(font: strong-fonts)
 
   // Set font size.
-  show footnote: set text(15pt)
+  show footnote: set text(13pt)
   show footnote.entry: set text(size: 10pt)
   show math.equation: set text(font_sizes.at("math"))
 
@@ -950,10 +1055,13 @@
   show list: set par(spacing: 2em)
   show math.equation.where(block: true): set par(spacing: 1.5em)
 
+  // https://zenn.dev/akamimi/articles/04d28e2f4fd602#comment-a90a634a9a321a
+  show "^": h(0.25em, weak: true)
+
   // https://github.com/typst/typst/discussions/4448?utm_source=chatgpt.com#discussioncomment-9913935
   show footnote: it => {
     let num = numbering(it.numbering, ..counter(footnote).at(here()))
-    box(width: measure[1].width, super(num))
+    box(width: measure["1"].width, super([注#num]))
   }
   show footnote.entry: it => {
     set par(justify: false)
@@ -978,22 +1086,26 @@
     if it.element != none and it.element.func() == figure {
       let el = it.element
       let loc = el.location()
-      let chapt = counter(heading).at(loc).at(0)
+      let chapt = chapter_prefix(loc)
 
       link(loc)[#if el.kind == "image" or el.kind == "table" {
           // counting
-          let num = counter(el.kind + "-chapter" + str(chapt)).at(loc).at(0)
+          let num = counter(el.kind + "-chapter" + chapt).at(loc).at(0)
           it.element.supplement
           " "
-          str(chapt)
+          chapt
           "."
           str(num)
         } else if el.kind == "thmenv" {
-          let thms = query(selector(<meta:thmenvcounter>))
-          let number = thmcounters.at(thms.first().location()).at("latest")
+          let meta = query(selector(<meta:thmenvcounter>).after(loc)).first()
+          let number = if meta != none {
+            thmcounters.at(meta.location()).at("latest")
+          } else {
+            thmcounters.at(loc).at("latest")
+          }
           it.element.supplement
           " "
-          numbering(it.element.numbering, ..number)
+          thm_numbering(it.element.numbering, number, loc)
         } else {
           it
         }
@@ -1001,12 +1113,12 @@
     } else if it.element != none and it.element.func() == math.equation {
       let el = it.element
       let loc = el.location()
-      let chapt = counter(heading).at(loc).at(0)
+      let chapt = chapter_prefix(loc)
       let num = counter(math.equation).at(loc).at(0)
 
       it.element.supplement
       " ("
-      str(chapt)
+      chapt
       "."
       str(num)
       ")"
@@ -1107,7 +1219,7 @@
         set par(
           leading: par-distance,
           spacing: par-distance,
-          first-line-indent: (all: true, amount: 20pt),
+          first-line-indent: (all: true, amount: firstline-indent.ja),
           justify: true,
         )
         main-chapter-pages(body)
@@ -1121,7 +1233,7 @@
       set par(
         leading: par-distance,
         spacing: par-distance,
-        first-line-indent: (all: true, amount: 20pt),
+        first-line-indent: (all: true, amount: firstline-indent.ja),
         justify: true,
       )
       main-chapter-pages(body)
