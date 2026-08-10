@@ -7,6 +7,14 @@
 stepney141 が自分の好みに沿って書いた、日本語文書のための[Typst](https://github.com/typst/typst)のテンプレートです。
 Tom Python 氏による『[Typst で書く卒論・修論テンプレート](https://zenn.dev/chantakan/articles/ed80950004d145)』をベースにしつつ、大きくアレンジしています。
 
+## 構成
+
+- `template/report.typ`：リアペ・レポート用テンプレート
+- `template/thesis.typ`：卒論・修論用テンプレート
+- `template/common/`：両テンプレートの共通スタイル
+- `template/bibliography.typ`：卒論・修論用の参考文献処理
+- `リアペ・レポートサンプル/`、`卒論・修論サンプル/`：利用例と生成PDF
+
 ## 使用フォント
 
 全てフリーフォントです。
@@ -18,3 +26,16 @@ Tom Python 氏による『[Typst で書く卒論・修論テンプレート](htt
 ## 使い方
 
 - [公式マニュアル](https://typst.app/docs/)
+
+各テンプレートの使い方は、次のサンプルを参照してください。
+
+- `リアペ・レポートサンプル/main.typ`
+- `卒論・修論サンプル/main.typ`
+
+## 開発
+
+コンパイルテストには Typst 0.15.1と使用フォントが必要です。
+
+```sh
+./scripts/test.sh
+```

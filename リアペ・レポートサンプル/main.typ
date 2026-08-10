@@ -1,10 +1,10 @@
-#import "./template.typ": *
+#import "../template/report.typ": *
 
 #show: report.with()
 
 = 2023年秋学期 探偵学入門 期末レポート
 
-#name_box(id: "A1234567", name: "山田太郎（国際福祉学部物理学科）")
+#name-box(id: "A1234567", name: "山田太郎（国際福祉学部物理学科）")
 
 == 1. すばらしい節
 

@@ -1,6 +1,6 @@
-#import "./template.typ": *
+#import "../template/thesis.typ": *
 
-#show: master_thesis.with(
+#show: master-thesis.with(
   title: "Typstで書く修論のテンプレ",
   subtitle: "(An Example of a Master Thesis in Typst)",
   author: "右往 左往",
@@ -11,18 +11,18 @@
   mentor: "魚 竿",
   mentor-post: "准教授",
   class: "修士",
-  abstract_ja: [
+  abstract-ja: [
     近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい. 近年の宇宙ってほんますごい.
   ],
-  keywords_ja: ("宇宙", "異常検知"),
-  bibliography: (file: "references.bib"),
-  enable_toc_of_image: true,
-  enable_toc_of_table: true,
+  keywords-ja: ("宇宙", "異常検知"),
+  bibliography: (file: "/卒論・修論サンプル/references.bib"),
+  enable-toc-of-image: true,
+  enable-toc-of-table: true,
 )
 
 = 序論
 
-Typst #cite(<madje2022programmable>) は、Markdownのような分かりやすい記法で、PDF文書・ポスター・スライド等の各種ドキュメントを簡単に作成できます。Rust言語で書かれており、#LATEX に比べてコンパイルが極めて高速なのが特長です.
+Typst #cite(<madje2022programmable>) は、Markdownのような分かりやすい記法で、PDF文書・ポスター・スライド等の各種ドキュメントを簡単に作成できます。Rust言語で書かれており、#latex に比べてコンパイルが極めて高速なのが特長です.
 
 == Typstは優秀だ
 
@@ -111,7 +111,7 @@ $\
 
 他にも ```typ #include path.typ``` とすれば他ファイルを参照できます。テンプレートファイルを作って別のファイルから呼び出したり、長い分量の本などを作成する際に章ごとにファイルを分けることなどができます。
 
-#LATEX は世界中のユーザによる膨大な資産と、長年かけて築いてきた圧倒的なシェアがあるため、すぐにTypstに取って代わることはないでしょう。しかし講義ノート・卒論/修論・学会の予稿等の作成などの場面では、少しずつ Typst に置き換わっていくでしょう（願望）。
+#latex は世界中のユーザによる膨大な資産と、長年かけて築いてきた圧倒的なシェアがあるため、すぐにTypstに取って代わることはないでしょう。しかし講義ノート・卒論/修論・学会の予稿等の作成などの場面では、少しずつ Typst に置き換わっていくでしょう（願望）。
 #img(
   image("Figures/typst-github.svg", width: 20%),
   caption: [Typst + git #cite(<madje2022programmable>)],
@@ -221,12 +221,12 @@ Typstでは定理の書き方などをカスタマイズできます.
 
 == 実例
 
-`thmbox`関数を作ってカスタマイズをできるようにしました.
+`thm-box`関数を作ってカスタマイズをできるようにしました.
 ```typ
-#let theorem = thmbox(
+#let theorem = thm-box(
   "theorem", //identifier
   "定理",
-  base_level: 1
+  base-level: 1
 )
 
 #theorem("オイラー")[
@@ -234,10 +234,10 @@ Typstでは定理の書き方などをカスタマイズできます.
 ] <theorem>
 ```
 
-#let theorem = thmbox(
+#let theorem = thm-box(
   "theorem",
   "定理",
-  base_level: 1,
+  base-level: 1,
 )
 
 #theorem("湯川")[
@@ -245,20 +245,20 @@ Typstでは定理の書き方などをカスタマイズできます.
 ] <theorem>
 
 ```typ
-#let lemma = thmbox(
+#let lemma = thm-box(
   "theorem", //identifier
   "補題",
-  base_level: 1,
+  base-level: 1,
 )
 
 #lemma[
   帰ってTypstやろーぜー！
 ] <lemma>
 ```
-#let lemma = thmbox(
+#let lemma = thm-box(
   "theorem",
   "補題",
-  base_level: 1,
+  base-level: 1,
 )
 
 #lemma[
@@ -271,10 +271,10 @@ Typstでは定理の書き方などをカスタマイズできます.
 identifier毎にカウントを柔軟に変えられるようにしてあるので, 様々な論文の形式に対応できるはずです.
 
 ```typ
-#let definition = thmbox(
+#let definition = thm-box(
   "definition", //identifier
   "定義",
-  base_level: 1,
+  base-level: 1,
   stroke: black + 1pt
 )
 #definition("Prime numbers")[
@@ -283,10 +283,10 @@ identifier毎にカウントを柔軟に変えられるようにしてあるの�
 ] <definition>
 ```
 
-#let definition = thmbox(
+#let definition = thm-box(
   "definition",
   "定義",
-  base_level: 1,
+  base-level: 1,
   stroke: black + 1pt,
 )
 
@@ -297,7 +297,7 @@ identifier毎にカウントを柔軟に変えられるようにしてあるの�
 このように、「@definition」のカウントは「2.1」にリセットされていますね。
 
 ```typ
-#let corollary = thmbox(
+#let corollary = thm-box(
   "corollary",
   "Corollary",
   base: "theorem",
@@ -308,7 +308,7 @@ identifier毎にカウントを柔軟に変えられるようにしてあるの�
 ] <corollary>
 ```
 
-#let corollary = thmbox(
+#let corollary = thm-box(
   "corollary",
   "Corollary",
   base: "theorem",
@@ -321,7 +321,7 @@ identifier毎にカウントを柔軟に変えられるようにしてあるの�
 baseにidentifierを入れることで@corollary のようにサブカウントを実現できます.
 
 ```typ
-#let example = thmplain(
+#let example = thm-plain(
   "example",
   "Example"
 ).with(numbering: none)
@@ -331,7 +331,7 @@ baseにidentifierを入れることで@corollary のようにサブカウント�
 ] <example>
 ```
 
-#let example = thmplain(
+#let example = thm-plain(
   "example",
   "例",
 ).with(numbering: none)
@@ -340,22 +340,22 @@ baseにidentifierを入れることで@corollary のようにサブカウント�
   数式は\$\$で囲む
 ] <example>
 
-thmplain関数を使ってplain表現も可能です.
+thm-plain関数を使ってplain表現も可能です.
 
-#Appendix
+#appendix-start()
 
 = こういう機能もいるよね
 
 == 概要
 
-このテンプレートでは、付録を始めたい場所に `#Appendix` もしくは `#appendix_start()` と一行書くだけで、以降が付録セクションになります。ヘッダの表示やナンバリング方式も自動でアルファベットに切り替わります。
+このテンプレートでは、付録を始めたい場所に `#appendix-start()` と一行書くだけで、以降が付録セクションになります。ヘッダの表示やナンバリング方式も自動でアルファベットに切り替わります。
 
 ```typ
-#Appendix
+#appendix-start()
 
 = こういう機能もいるよね
 
 == 概要
 
-このテンプレートでは、付録を始めたい場所に `#Appendix` もしくは `#appendix_start()` と一行書くだけで、以降が付録セクションになります。ヘッダの表示やナンバリング方式も自動でアルファベットに切り替わります。
+このテンプレートでは、付録を始めたい場所に `#appendix-start()` と一行書くだけで、以降が付録セクションになります。ヘッダの表示やナンバリング方式も自動でアルファベットに切り替わります。
 ```

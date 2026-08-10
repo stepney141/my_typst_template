@@ -1,79 +1,19 @@
 // https://github.com/ut-khanlab/master_thesis_template_for_typst
 
-// Keep Typst's default cite for Hayagriva; route through a wrapper based on bibliography style.
-#let typst-cite = cite
-#import "@preview/pergamon:0.6.0": *
-// Hooked cite by Pergamon
-#let pergamon-cite = cite
-
-// Settings for Pergamon
-#let pergamon_style = format-citation-numeric()
-#let is_ja = reference => {
-  let lang = reference.fields.at("language", default: none)
-  lang != none and (lang == "ja" or lang == "ja-JP" or lang == "japanese" or lang == "jp")
-}
-#let format_reference_en = format-reference(
-  reference-label: pergamon_style.reference-label,
-  print-url: true,
-  suppress-fields: ("language",),
-  bibstring: ("in": none),
-)
-#let format_reference_ja = format-reference(
-  reference-label: pergamon_style.reference-label,
-  name-format: "{family}{given}",
-  list-end-delim-two: "、",
-  list-end-delim-many: "、",
-  format-fields: (
-    // 日本語文献に`translator`の指定があるなら{訳者名}(訳)とする
-    "parsed-translator": (dffmt, value, reference, field, options, style) => {
-      if value == none {
-        none
-      } else {
-        let names = value.map(d => format-name(d, name-type: "translator", format: options.at("name-format")))
-        let joined = concatenate-names(names, options: options, minnames: options.minnames, maxnames: options.maxnames)
-        [#joined (訳)]
-      }
-    },
-    // 日本語文献に`editor`の指定があるなら{編者名}(編)とする
-    "parsed-editor": (dffmt, value, reference, field, options, style) => {
-      if value == none {
-        none
-      } else {
-        let names = value.map(d => format-name(d, name-type: "editor", format: options.at("name-format")))
-        let joined = concatenate-names(names, options: options, minnames: options.minnames, maxnames: options.maxnames)
-        [#joined (編)]
-      }
-    },
-  ),
-  format-journaltitle: it => it,
-  format-issuetitle: it => it,
-  format-maintitle: it => it,
-  format-booktitle: it => it,
-  print-url: true,
-  suppress-fields: ("language",),
-  bibstring: (
-    "in": none,
-    "editor": none,
-  ),
-)
-#let format_reference_by_lang = (index, reference) => {
-  if is_ja(reference) {
-    format_reference_ja(index, reference)
-  } else {
-    format_reference_en(index, reference)
-  }
-}
+#import "./common/body.typ" as common-body
+#import "./common/page.typ" as common-page
+#import "./bibliography.typ" as bibliography-support
 
 // Set font sizes
-#let font_sizes = (
+#let font-sizes = (
   h1: 18pt,
   h2: 16pt,
   h3: 14pt,
-  under_h4: 12pt,
+  under-h4: 12pt,
   normal: 11pt,
   math: 12pt,
 )
-#let font_sizes_cover = (
+#let font-sizes-cover = (
   title: 22pt,
   subtitle: 20pt,
   normal: 17pt,
@@ -82,7 +22,7 @@
 // Configure paragraph properties.
 #let par-distance = 0.9em
 // 字下げ; 日本語は1文字分
-#let firstline-indent = (
+#let first-line-indent = (
   ja: 1em,
   en: 20pt,
 )
@@ -94,22 +34,52 @@
 #let section-fonts = ("Inter", "UDEV Gothic 35JPDOC") // sans serif
 #let title-fonts = ("Nimbus Roman", "UDEV Gothic 35JPDOC") // en: serif, ja: sans serif
 
+#let thesis-body-config = (
+  text: (
+    font: body-fonts,
+    size: font-sizes.at("normal"),
+  ),
+  strong: (font: strong-fonts),
+  list: (indent: 25pt),
+  list-par: (spacing: 2em),
+  enum: (indent: 25pt),
+  enum-par: (spacing: 2em),
+  block-equation-par: (spacing: 1.5em),
+)
+
+#let thesis-paragraph-config = (
+  leading: par-distance,
+  spacing: par-distance,
+  first-line-indent: (all: true, amount: first-line-indent.ja),
+  justify: true,
+)
+
+#let thesis-page-config(paper-size) = (
+  paper: paper-size,
+  margin: (
+    top: 3cm,
+    left: 3cm,
+    right: 3cm,
+    bottom: 2.5cm,
+  ),
+)
+
 // Store theorem environment numbering
-#let thmcounters = state("thm", (
+#let thm-counters = state("thm", (
   "counters": ("heading": ()),
   "latest": (),
 ))
 
 // Track prefix mode for chapter headings (used for headings, TOC, refs).
 // Values: "main" | "appendix" | "none"
-#let prefix_mode = state("prefix-mode", "main")
+#let prefix-mode = state("prefix-mode", "main")
 
-#let heading_label(loc) = {
+#let heading-label(loc) = {
   let vals = counter(heading).at(loc)
   if vals.len() == 0 {
     return none
   }
-  let mode = prefix_mode.at(loc)
+  let mode = prefix-mode.at(loc)
   if mode == "none" {
     return none
   } else if mode == "appendix" {
@@ -129,13 +99,13 @@
 }
 
 // Chapter prefix for numbering (e.g. "1" in main, "A" in appendix).
-#let chapter_prefix(loc) = {
+#let chapter-prefix(loc) = {
   let vals = counter(heading).at(loc)
   if vals.len() == 0 {
     return "0"
   }
   let head = vals.at(0)
-  let mode = prefix_mode.at(loc)
+  let mode = prefix-mode.at(loc)
   if mode == "appendix" {
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ".at(head - 1)
   } else {
@@ -144,45 +114,45 @@
 }
 
 // Format theorem numbers with appendix-aware chapter prefix.
-#let thm_numbering(numbering_spec, nums, loc) = {
-  if numbering_spec == none {
+#let thm-numbering(numbering-spec, nums, loc) = {
+  if numbering-spec == none {
     return none
   }
-  if prefix_mode.at(loc) == "appendix" {
+  if prefix-mode.at(loc) == "appendix" {
     if nums.len() == 0 {
       return none
     }
-    let head = chapter_prefix(loc)
+    let head = chapter-prefix(loc)
     if nums.len() == 1 {
       head
     } else {
       head + "." + nums.slice(1).map(str).join(".")
     }
   } else {
-    numbering(numbering_spec, ..nums)
+    numbering(numbering-spec, ..nums)
   }
 }
 
 // Setting theorem environment
-#let thmenv(identifier, base, base_level, fmt) = {
-  let global_numbering = numbering
+#let thm-env(identifier, base, base-level, fmt) = {
+  let global-numbering = numbering
 
   return (
     ..args,
     body,
     number: auto,
     numbering: "1.1",
-    refnumbering: auto,
+    ref-numbering: auto,
     supplement: identifier,
     base: base,
-    base_level: base_level,
+    base-level: base-level,
   ) => {
     let name = none
     if args != none and args.pos().len() > 0 {
       name = args.pos().first()
     }
-    if refnumbering == auto {
-      refnumbering = numbering
+    if ref-numbering == auto {
+      ref-numbering = numbering
     }
     let result = none
     if number == auto and numbering == none {
@@ -191,8 +161,8 @@
     if number == auto and numbering != none {
       result = context {
         let heading-counter = counter(heading).get()
-        return thmcounters.update(thmpair => {
-          let counters = thmpair.at("counters")
+        return thm-counters.update(thm-pair => {
+          let counters = thm-pair.at("counters")
           // Manually update heading counter
           counters.at("heading") = heading-counter
           if not identifier in counters.keys() {
@@ -204,11 +174,11 @@
             let bc = counters.at(base)
 
             // Pad or chop the base count
-            if base_level != none {
-              if bc.len() < base_level {
-                bc = bc + (0,) * (base_level - bc.len())
-              } else if bc.len() > base_level {
-                bc = bc.slice(0, base_level)
+            if base-level != none {
+              if bc.len() < base-level {
+                bc = bc + (0,) * (base-level - bc.len())
+              } else if bc.len() > base-level {
+                bc = bc.slice(0, base-level)
               }
             }
 
@@ -233,8 +203,8 @@
       }
 
       number = context {
-        let nums = thmcounters.get().at("latest")
-        thm_numbering(numbering, nums, here())
+        let nums = thm-counters.get().at("latest")
+        thm-numbering(numbering, nums, here())
       }
     }
 
@@ -247,31 +217,31 @@
       outlined: false,
       caption: none,
       supplement: supplement,
-      numbering: refnumbering,
+      numbering: ref-numbering,
     )
   }
 }
 
 // Definition of theorem box
-#let thmbox(
+#let thm-box(
   identifier,
   head,
-  ..blockargs,
+  ..block-args,
   supplement: auto,
   padding: (top: 0.5em, bottom: 0.5em),
-  namefmt: x => [(#x)],
-  titlefmt: strong,
-  bodyfmt: x => x,
+  name-fmt: x => [(#x)],
+  title-fmt: strong,
+  body-fmt: x => x,
   separator: [#h(0.1em):#h(0.2em)],
   base: "heading",
-  base_level: none,
+  base-level: none,
 ) = {
   if supplement == auto {
     supplement = head
   }
-  let boxfmt(name, number, body, title: auto) = {
+  let box-fmt(name, number, body, title: auto) = {
     if not name == none {
-      name = [ #namefmt(name)]
+      name = [ #name-fmt(name)]
     } else {
       name = []
     }
@@ -281,8 +251,8 @@
     if not number == none {
       title += " " + number
     }
-    title = titlefmt(title)
-    body = bodyfmt(body)
+    title = title-fmt(title)
+    body = body-fmt(body)
     set par(first-line-indent: 0pt)
     pad(
       ..padding,
@@ -291,29 +261,29 @@
         inset: 1.2em,
         radius: 0.3em,
         breakable: false,
-        ..blockargs.named(),
+        ..block-args.named(),
         [#title#name#separator#body],
       ),
     )
   }
-  return thmenv(
+  return thm-env(
     identifier,
     base,
-    base_level,
-    boxfmt,
+    base-level,
+    box-fmt,
   ).with(
     supplement: supplement,
   )
 }
 
 // Setting plain version
-#let thmplain = thmbox.with(
+#let thm-plain = thm-box.with(
   padding: (top: 0em, bottom: 0em),
   breakable: true,
   inset: (top: 0em, left: 1.2em, right: 1.2em),
-  namefmt: name => emph([(#name)]),
-  titlefmt: emph,
-  bodyfmt: body => {
+  name-fmt: name => emph([(#name)]),
+  title-fmt: emph,
+  body-fmt: body => {
     // fix indents in the theorems
     set list(indent: 10pt)
     set enum(indent: 10pt)
@@ -321,40 +291,40 @@
   },
 )
 
-#let definition = thmplain(
+#let definition = thm-plain(
   "definition", //identifier
   "定義",
-  base_level: 1,
+  base-level: 1,
   // stroke: black + 1pt,
-  titlefmt: strong,
-  namefmt: name => [(#name)],
+  title-fmt: strong,
+  name-fmt: name => [(#name)],
   // inset: (left: 20pt, right: 0em),
   padding: (top: 0.5em, bottom: 1em),
 )
 
-#let theorem = thmplain(
+#let theorem = thm-plain(
   "theorem", //identifier
   "定理",
-  titlefmt: strong,
-  base_level: 1,
+  title-fmt: strong,
+  base-level: 1,
   // inset: (left: 20pt, right: 0em),
   padding: (top: 0.5em),
 )
 
-#let lemma = thmplain(
+#let lemma = thm-plain(
   "lemma", //identifier
   "補題",
-  titlefmt: strong,
-  base_level: 1,
+  title-fmt: strong,
+  base-level: 1,
   // inset: (left: 20pt, right: 0em),
   padding: (top: 0.5em),
 )
 
-#let proof = thmplain(
+#let proof = thm-plain(
   "proof", // identifier
   "証明",
-  titlefmt: strong,
-  base_level: 1,
+  title-fmt: strong,
+  base-level: 1,
   // inset: (left: 20pt, right: 0em),
   padding: (bottom: 0.5em),
 ).with(
@@ -362,9 +332,9 @@
 )
 
 // Counting equation number
-#let equation_num(_) = {
+#let equation-num(_) = {
   context {
-    let chapt = chapter_prefix(here())
+    let chapt = chapter-prefix(here())
     let c = counter(math.equation)
     let n = c.get().at(0)
     "(" + str(chapt) + "." + str(n) + ")"
@@ -372,9 +342,9 @@
 }
 
 // Counting table number
-#let table_num(_) = {
+#let table-num(_) = {
   context {
-    let chapt = chapter_prefix(here())
+    let chapt = chapter-prefix(here())
     let c = counter("table-chapter" + chapt)
     let n = c.get().at(0)
     chapt + "." + str(n)
@@ -382,21 +352,21 @@
 }
 
 // Counting image number
-#let image_num(_) = {
+#let image-num(_) = {
   context {
-    let chapt = chapter_prefix(here())
+    let chapt = chapter-prefix(here())
     let c = counter("image-chapter" + chapt)
     let n = c.get().at(0)
     chapt + "." + str(n)
   }
 }
 
-#let gap_between_figures = 1.5em
+#let gap-between-figures = 1.5em
 
 // Definition of image format
 #let img(img, caption: "", label: none, placement: auto, gap: 1em) = {
   context {
-    let chapt = chapter_prefix(here())
+    let chapt = chapter-prefix(here())
     counter("image-chapter" + chapt).step()
 
     set figure.caption(separator: [ ^---^ ])
@@ -414,20 +384,20 @@
         img,
         caption: caption,
         supplement: [図],
-        numbering: image_num,
+        numbering: image-num,
         kind: "image",
         placement: none,
         gap: gap,
       )#label
     ]
-    let fig_block = block(width: 100%)[
+    let fig-block = block(width: 100%)[
       #align(center)[#fig-body]
     ]
 
     if placement == none {
-      block(above: gap_between_figures, below: gap_between_figures)[#fig_block]
+      block(above: gap-between-figures, below: gap-between-figures)[#fig-block]
     } else {
-      place(placement, float: true, clearance: gap_between_figures)[#fig_block]
+      place(placement, float: true, clearance: gap-between-figures)[#fig-block]
     }
   }
 }
@@ -435,7 +405,7 @@
 // Definition of table format
 #let tbl(tbl, caption: "", label: none, placement: auto) = {
   context {
-    let chapt = chapter_prefix(here())
+    let chapt = chapter-prefix(here())
     counter("table-chapter" + chapt).step()
 
     set figure.caption(separator: [ ^---^ ])
@@ -450,28 +420,28 @@
         tbl,
         caption: caption,
         supplement: [表],
-        numbering: table_num,
+        numbering: table-num,
         kind: "table",
         placement: placement,
         gap: 1em,
       )#label
     ]
 
-    let tbl_block = block(width: 100%)[
+    let tbl-block = block(width: 100%)[
       #align(center)[#tbl-body]
     ]
 
     if placement == none {
-      block(above: gap_between_figures, below: gap_between_figures)[#tbl_block]
+      block(above: gap-between-figures, below: gap-between-figures)[#tbl-block]
     } else {
-      place(placement, float: true, clearance: gap_between_figures)[#tbl_block]
+      place(placement, float: true, clearance: gap-between-figures)[#tbl-block]
     }
   }
 }
 
 // Definition of abstruct page
-#let abstract_page(abstract_ja, abstract_en, keywords_ja: (), keywords_en: ()) = {
-  if abstract_ja != [] {
+#let abstract-page(abstract-ja, abstract-en, keywords-ja: (), keywords-en: ()) = {
+  if abstract-ja != [] {
     show <_ja_abstract_>: {
       align(center)[
         #text(
@@ -490,11 +460,11 @@
 
     // Configure paragraph properties.
     set text(size: 12pt)
-    set par(leading: 0.8em, first-line-indent: (all: true, amount: firstline-indent.ja), justify: true)
+    set par(leading: 0.8em, first-line-indent: (all: true, amount: first-line-indent.ja), justify: true)
     set par(spacing: 1.2em)
-    abstract_ja
+    abstract-ja
 
-    if keywords_ja != () {
+    if keywords-ja != () {
       par(first-line-indent: 0em)[
         #text(
           font: body-fonts,
@@ -502,14 +472,14 @@
           size: 12pt,
         )[
           キーワード:
-          #keywords_ja.join(", ")
+          #keywords-ja.join(", ")
         ]
       ]
     }
     // pagebreak()
   }
 
-  if abstract_en != [] {
+  if abstract-en != [] {
     show <_en_abstract_>: {
       align(center)[
         #text(
@@ -523,7 +493,7 @@
 
     set text(size: 12pt)
     h(1em)
-    abstract_en
+    abstract-en
     par(first-line-indent: 0em)[
       #text(
         font: body-fonts,
@@ -531,7 +501,7 @@
         size: 12pt,
       )[
         Key Words:
-        #keywords_en.join("; ")
+        #keywords-en.join("; ")
       ]
     ]
     // pagebreak()
@@ -571,16 +541,16 @@
     let elements = query(heading.where(outlined: true))
     for el in elements {
       // Use roman numerals only for headings physically before the TOC call.
-      let before_toc = query(heading.where(outlined: true).before(here())).find(one => one == el) != none
-      let page_num = if before_toc {
+      let before-toc = query(heading.where(outlined: true).before(here())).find(one => one == el) != none
+      let page-num = if before-toc {
         numbering("i", counter(page).at(el.location()).first())
       } else {
         counter(page).at(el.location()).first()
       }
 
       link(el.location())[#{
-        let chapt_num = if el.numbering != none {
-          heading_label(el.location())
+        let chapt-num = if el.numbering != none {
+          heading-label(el.location())
         } else { none }
 
         if el.level == 1 {
@@ -589,8 +559,8 @@
             weight: "regular",
           )
           v(0.5em)
-          if chapt_num == none {} else {
-            chapt_num
+          if chapt-num == none {} else {
+            chapt-num
             h(1em)
           }
           let rebody = to-string(el.body)
@@ -601,7 +571,7 @@
             weight: "regular",
           )
           h(1.5em)
-          chapt_num
+          chapt-num
           h(0.5em)
           let rebody = to-string(el.body)
           rebody
@@ -611,7 +581,7 @@
             weight: "regular",
           )
           h(3em)
-          chapt_num
+          chapt-num
           h(0.5em)
           let rebody = to-string(el.body)
           rebody
@@ -620,14 +590,14 @@
         }
       }]
       box(width: 1fr, h(0.5em) + box(width: 1fr, repeat[.]) + h(0.5em))
-      [p. #page_num]
+      [p. #page-num]
       linebreak()
     }
   }
 }
 
 // Definition of image outline
-#let toc_image() = {
+#let toc-image() = {
   align(center)[
     #text(
       font: section-fonts,
@@ -646,22 +616,22 @@
     let elements = query(figure.where(outlined: true, kind: "image"))
     for el in elements {
       let loc = el.location()
-      let chapt = chapter_prefix(loc)
+      let chapt = chapter-prefix(loc)
       let num = counter(el.kind + "-chapter" + chapt).at(loc).at(0)
-      let page_num = counter(page).at(loc).first()
-      let caption_body = to-string(el.caption.body)
+      let page-num = counter(page).at(loc).first()
+      let caption-body = to-string(el.caption.body)
       [図 #(chapt + "." + str(num))]
       h(1em)
-      caption_body
+      caption-body
       box(width: 1fr, h(0.5em) + box(width: 1fr, repeat[.]) + h(0.5em))
-      [p. #page_num]
+      [p. #page-num]
       linebreak()
     }
   }
 }
 
 // Definition of table outline
-#let toc_table() = {
+#let toc-table() = {
   align(center)[
     #text(
       font: section-fonts,
@@ -680,15 +650,15 @@
     let elements = query(figure.where(outlined: true, kind: "table"))
     for el in elements {
       let loc = el.location()
-      let chapt = chapter_prefix(loc)
+      let chapt = chapter-prefix(loc)
       let num = counter(el.kind + "-chapter" + chapt).at(loc).at(0)
-      let page_num = counter(page).at(el.location()).first()
-      let caption_body = to-string(el.caption.body)
+      let page-num = counter(page).at(el.location()).first()
+      let caption-body = to-string(el.caption.body)
       [表 #(chapt + "." + str(num))]
       h(1em)
-      caption_body
+      caption-body
       box(width: 1fr, h(0.5em) + box(width: 1fr, repeat[.]) + h(0.5em))
-      [p. #page_num]
+      [p. #page-num]
       linebreak()
     }
   }
@@ -696,7 +666,7 @@
 
 // Setting header
 // ref: https://stackoverflow.com/questions/76363935/typst-header-that-changes-from-page-to-page-based-on-state
-#let custom_header() = context [
+#let custom-header() = context [
   #set par(first-line-indent: 0pt)
   #let i = counter(page).get().first()
   #let ht-first = state("page-first-section", [])
@@ -713,7 +683,7 @@
     if content.numbering == none {
       return none
     }
-    let label = heading_label(content.location())
+    let label = heading-label(content.location())
     if label == none { none } else { [#label #h(10pt)] }
   }
 
@@ -743,146 +713,27 @@
   #line(length: 100%, stroke: 0.5pt + black)
 ]
 
-#let bibliography_state = state("bibliography-state", (
-  "file": none,
-  "csl": none,
-  "style": "hayagriva",
-  "shown": false,
-))
+#let configure-bibliography(config) = bibliography-support.configure(config)
 
-#let configure_bibliography(config) = {
-  bibliography_state.update(_ => (
-    "file": config.at("file", default: none),
-    "csl": config.at("csl", default: none),
-    "style": config.at("style", default: "hayagriva"),
-    "shown": false,
-  ))
-}
+#let cite(..args) = bibliography-support.cite(..args)
 
-// Route citations to the correct backend (hayagriva or pergamon) while allowing string keys everywhere.
-#let cite(..args) = context {
-  let style = bibliography_state.get().at("style", default: "hayagriva")
-  let pos = args.pos()
-  let named = args.named()
+#let render-bibliography-if-needed() = bibliography-support.render(
+  prefix-mode: prefix-mode,
+  paragraph-config: thesis-paragraph-config,
+  section-fonts: section-fonts,
+  heading-size: font-sizes.at("h1"),
+  header: custom-header(),
+)
 
-  if style == "pergamon" {
-    let keys = pos.map(k => if type(k) == str { k } else { str(k) })
-    pergamon-cite(..keys, ..named)
-  } else {
-    let keys = pos.map(k => if type(k) == str { label(k) } else { k })
-    let cites = keys.map(k => typst-cite(k))
-    if cites.len() == 0 {
-      none
-    } else if cites.len() == 1 {
-      cites.first()
-    } else {
-      // Adjacent citations are grouped by Typst; join with a space.
-      cites.join([ ])
-    }
-  }
-}
-
-#let show-bibliography-hayagriva(bibfile, csl) = {
-  // Bibliography headings should have no chapter prefix.
-  prefix_mode.update("none")
-  set par(
-    leading: par-distance,
-    spacing: par-distance,
-    first-line-indent: 0pt,
-    justify: true,
-  )
-
-  show bibliography: set text(12pt)
-  show heading.where(level: 1): it => {
-    pagebreak()
-    counter(math.equation).update(0)
-    set text(
-      font: section-fonts,
-      size: font_sizes.at("h1"),
-    )
-    text(weight: "bold")[
-      #v(0.2em)
-      #it.body
-      #v(0.5em)
-    ]
-  }
-  heading(level: 1, numbering: none)[参考文献]
-
-  bibliography(
-    bibfile,
-    title: none,
-    // full: true,
-    style: if csl != none {
-      csl
-    } else {
-      "ieee"
-    },
-  )
-}
-
-#let show-bibliography-pergamon(bibliography-file) = {
-  prefix_mode.update("none")
-  set par(
-    leading: par-distance,
-    spacing: par-distance,
-    first-line-indent: 0pt,
-    justify: true,
-  )
-
-  show bibliography: set text(12pt)
-  show heading.where(level: 1): it => {
-    pagebreak()
-    counter(math.equation).update(0)
-    set text(
-      font: section-fonts,
-      size: font_sizes.at("h1"),
-    )
-    text(weight: "bold")[
-      #v(0.5em)
-      #it.body
-      #v(0.5em)
-    ]
-  }
-
-  print-bibliography(
-    format-reference: format_reference_by_lang,
-    label-generator: pergamon_style.label-generator,
-    sorting: reference => reference.fields.at("sortkey", default: reference.entry_key),
-    title: "参考文献",
-  )
-}
-
-#let render_bibliography_if_needed() = context {
-  let config = bibliography_state.get()
-  if config.at("file") == none or config.at("shown") {
-    return none
-  }
-
-  // Bibliography may be rendered outside appendix; ensure header & numbering stay in main style.
-  set page(header: custom_header(), numbering: "1")
-
-  let bibfile = config.at("file")
-  let bibstyle = config.at("style", default: "hayagriva")
-  if bibstyle == "hayagriva" {
-    show-bibliography-hayagriva(bibfile, config.at("csl"))
-  } else if bibstyle == "pergamon" {
-    show-bibliography-pergamon(bibfile)
-  }
-  bibliography_state.update(conf => {
-    conf.at("shown") = true
-    conf
-  })
-}
-
-#let set_common_subheadings(body) = {
+#let set-common-subheadings(body) = {
   show heading.where(level: 2): it => block({
     set par(first-line-indent: 0pt)
     set text(
       font: section-fonts,
-      size: font_sizes.at("h2"),
+      size: font-sizes.at("h2"),
     )
     [
-      #text(weight: "semibold")[#heading_label(it.location())]
+      #text(weight: "semibold")[#heading-label(it.location())]
       #h(0.8em)
       #text(weight: "regular")[ #it.body ]
     ]
@@ -893,10 +744,10 @@
     set text(
       font: section-fonts,
       weight: "regular",
-      size: font_sizes.at("h3"),
+      size: font-sizes.at("h3"),
     )
     text()[
-      #heading_label(it.location()) #h(0.8em) #it.body
+      #heading-label(it.location()) #h(0.8em) #it.body
     ]
   })
 
@@ -905,7 +756,7 @@
     set text(
       font: section-fonts,
       weight: "regular",
-      size: font_sizes.at("under_h4"),
+      size: font-sizes.at("under-h4"),
     )
     text()[
       #it.body
@@ -918,7 +769,7 @@
       set text(
         font: section-fonts,
         weight: "regular",
-        size: font_sizes.at("under_h4"),
+        size: font-sizes.at("under-h4"),
       )
       set block(above: 2em, below: 1.5em)
       it
@@ -928,47 +779,40 @@
   body
 }
 
-#let appendix_setup() = context {
-  render_bibliography_if_needed()
+#let appendix-setup() = context {
+  render-bibliography-if-needed()
 
   // Switch to appendix mode globally and restart heading/equation numbering.
-  prefix_mode.update("appendix")
+  prefix-mode.update("appendix")
   counter(heading).update(0)
   counter(math.equation).update(0)
 
-  set page(header: custom_header(), numbering: "1")
+  set page(header: custom-header(), numbering: "1")
 }
 
 #let appendix(body) = {
-  appendix_setup()
+  appendix-setup()
   [#body]
 }
 
 // Start appendix mode from this point onward without needing a closing bracket.
-#let appendix_start() = {
-  appendix_setup()
+#let appendix-start() = {
+  appendix-setup()
   none
-}
-
-// Zero-width marker for the new syntax: write `#Appendix` (or `#Appendix[]`) where
-// the appendix should start. The old `#appendix[ ... ]` form still works.
-#let Appendix = {
-  appendix_start()
-  []
 }
 
 #let main-chapter-pages(body) = {
   set page(
-    header: custom_header(),
+    header: custom-header(),
     numbering: "1",
   )
 
   counter(page).update(1)
 
-  set math.equation(supplement: [式], numbering: equation_num)
+  set math.equation(supplement: [式], numbering: equation-num)
 
-  let before_h1(it) = {
-    let label = heading_label(it.location())
+  let before-h1(it) = {
+    let label = heading-label(it.location())
     if label != none {
       text()[#label #h(1em)]
     }
@@ -980,25 +824,25 @@
     counter(math.equation).update(0)
     set text(
       font: section-fonts,
-      size: font_sizes.at("h1"),
+      size: font-sizes.at("h1"),
     )
     set block(spacing: 0.5em)
-    let label = before_h1(it)
-    text(weight: "bold", size: font_sizes.h2)[
+    let label = before-h1(it)
+    text(weight: "bold", size: font-sizes.h2)[
       #v(0.5em)
       #if label != none { label + linebreak() }
     ]
-    text(weight: "bold", size: font_sizes.h1 + 2pt)[
+    text(weight: "bold", size: font-sizes.h1 + 2pt)[
       #it.body
       #v(0.5em)
     ]
   }
 
-  set_common_subheadings(body)
+  set-common-subheadings(body)
 }
 
 // Construction of paper
-#let master_thesis(
+#let master-thesis(
   // The master thesis title.
   title: "ここにtitleが入る",
   subtitle: none,
@@ -1016,10 +860,10 @@
   year: datetime.today().year(), // 提出年度（提出日時が必要ない場合に使う）
   paper-type: "論文",
   // Abstruct
-  abstract_ja: [],
-  abstract_en: [],
-  keywords_ja: (),
-  keywords_en: (),
+  abstract-ja: [],
+  abstract-en: [],
+  keywords-ja: (),
+  keywords-en: (),
   // The paper size to use.
   paper-size: "a4",
   // The path to a bibliography file if you want to cite some external works.
@@ -1028,32 +872,24 @@
     style: "hayagriva", // "hayagriva" or "pergamon"
     csl: none,
   ),
-  enable_toc_of_image: false,
-  enable_toc_of_table: false,
+  enable-toc-of-image: false,
+  enable-toc-of-table: false,
   // The paper's content.
   body,
 ) = {
   // Set the document's metadata.
   set document(title: title, author: author)
 
-  configure_bibliography(bibliography)
-  let bibliography_file = bibliography.at("file", default: none)
-  let bibliography_style = bibliography.at("style", default: "hayagriva")
+  configure-bibliography(bibliography)
+  let bibliography-file = bibliography.at("file", default: none)
+  let bibliography-style = bibliography.at("style", default: "hayagriva")
 
-  // Set the body font.
-  set text(font: body-fonts, size: font_sizes.at("normal"))
-  show strong: set text(font: strong-fonts)
+  show: common-body.apply.with(config: thesis-body-config)
 
   // Set font size.
   show footnote: set text(13pt)
   show footnote.entry: set text(size: 10pt)
-  show math.equation: set text(font_sizes.at("math"))
-
-  // Set indents.
-  set list(indent: 25pt)
-  set enum(indent: 25pt)
-  show list: set par(spacing: 2em)
-  show math.equation.where(block: true): set par(spacing: 1.5em)
+  show math.equation: set text(font-sizes.at("math"))
 
   // https://zenn.dev/akamimi/articles/04d28e2f4fd602#comment-a90a634a9a321a
   show "^": h(0.25em, weak: true)
@@ -1071,22 +907,14 @@
   }
 
   // Configure the page properties.
-  set page(
-    paper: paper-size,
-    margin: (
-      top: 3cm,
-      left: 3cm,
-      right: 3cm,
-      bottom: 2.5cm,
-    ),
-  )
+  show: common-page.apply.with(config: thesis-page-config(paper-size))
 
   // citation number
   show ref: it => {
     if it.element != none and it.element.func() == figure {
       let el = it.element
       let loc = el.location()
-      let chapt = chapter_prefix(loc)
+      let chapt = chapter-prefix(loc)
 
       link(loc)[#if el.kind == "image" or el.kind == "table" {
           // counting
@@ -1099,13 +927,13 @@
         } else if el.kind == "thmenv" {
           let meta = query(selector(<meta:thmenvcounter>).after(loc)).first()
           let number = if meta != none {
-            thmcounters.at(meta.location()).at("latest")
+            thm-counters.at(meta.location()).at("latest")
           } else {
-            thmcounters.at(loc).at("latest")
+            thm-counters.at(loc).at("latest")
           }
           it.element.supplement
           " "
-          thm_numbering(it.element.numbering, number, loc)
+          thm-numbering(it.element.numbering, number, loc)
         } else {
           it
         }
@@ -1113,7 +941,7 @@
     } else if it.element != none and it.element.func() == math.equation {
       let el = it.element
       let loc = el.location()
-      let chapt = chapter_prefix(loc)
+      let chapt = chapter-prefix(loc)
       let num = counter(math.equation).at(loc).at(0)
 
       it.element.supplement
@@ -1124,48 +952,30 @@
       ")"
     } else if it.element != none and it.element.func() == heading {
       let el = it.element
-      heading_label(el.location())
+      heading-label(el.location())
     } else {
       it
     }
   }
-
-  // Display inline code in a small box
-  // that retains the correct baseline.
-  show raw.where(block: false): box.with(
-    fill: luma(240),
-    inset: (x: 3pt, y: 0pt),
-    outset: (y: 3pt),
-    radius: 2pt,
-  )
-
-  // Display block code in a larger block
-  // with more padding.
-  show raw.where(block: true): block.with(
-    fill: luma(240),
-    inset: 10pt,
-    radius: 4pt,
-    width: 100%,
-  )
 
   // The first page.
   align(center)[
     #set text(font: body-fonts)
 
     #v(80pt)
-    #text(size: font_sizes_cover.at("normal"))[
+    #text(size: font-sizes-cover.at("normal"))[
       #class#paper-type
     ]
     #v(40pt)
     #text(font: title-fonts, weight: "medium")[
-      #text(size: font_sizes_cover.at("title"))[#title]
+      #text(size: font-sizes-cover.at("title"))[#title]
       #if subtitle != none {
         v(10pt)
-        text(size: font_sizes_cover.at("subtitle"))[#subtitle]
+        text(size: font-sizes-cover.at("subtitle"))[#subtitle]
       }
     ]
     #v(150pt)
-    #text(size: font_sizes_cover.at("normal"))[
+    #text(size: font-sizes-cover.at("normal"))[
       #if (year != none) {
         text()[#year 年度]
       }
@@ -1176,14 +986,14 @@
     ]
 
     #if (mentor != "" or mentor-post != "") {
-      text(size: font_sizes_cover.at("normal"))[
+      text(size: font-sizes-cover.at("normal"))[
         指導教員 : #mentor #mentor-post
       ]
     }
 
     #v(40pt)
     #if (date != none) {
-      text(size: font_sizes_cover.at("normal"))[#date.at(0) 年 #date.at(1) 月 #date.at(2) 日 提出]
+      text(size: font-sizes-cover.at("normal"))[#date.at(0) 年 #date.at(1) 月 #date.at(2) 日 提出]
     }
 
     #pagebreak()
@@ -1194,59 +1004,54 @@
   counter(page).update(1)
 
   // Show abstruct
-  abstract_page(abstract_ja, abstract_en, keywords_ja: keywords_ja, keywords_en: keywords_en)
+  abstract-page(abstract-ja, abstract-en, keywords-ja: keywords-ja, keywords-en: keywords-en)
 
   set heading(numbering: "1.")
 
   // Start with a chapter outline.
   toc()
-  if enable_toc_of_image or enable_toc_of_table {
+  if enable-toc-of-image or enable-toc-of-table {
     pagebreak()
   }
-  if enable_toc_of_image {
-    toc_image()
+  if enable-toc-of-image {
+    toc-image()
   }
-  if enable_toc_of_table {
-    toc_table()
+  if enable-toc-of-table {
+    toc-table()
   }
 
-  if bibliography_file != none and bibliography_style == "pergamon" {
-    add-bib-resource(read(bibliography_file))
-
-    refsection(format-citation: pergamon_style.format-citation)[
+  if bibliography-file != none and bibliography-style == "pergamon" {
+    bibliography-support.with-pergamon(
+      {
       // 本文だけに段落設定を適用
-      #context {
-        set par(
-          leading: par-distance,
-          spacing: par-distance,
-          first-line-indent: (all: true, amount: firstline-indent.ja),
-          justify: true,
+      context {
+        common-body.paragraph(
+          main-chapter-pages(body),
+          config: thesis-paragraph-config,
         )
-        main-chapter-pages(body)
       }
 
-      #render_bibliography_if_needed()
-    ]
+      render-bibliography-if-needed()
+      },
+      file: bibliography-file,
+    )
   } else {
     // 本文だけに段落設定を適用
     context {
-      set par(
-        leading: par-distance,
-        spacing: par-distance,
-        first-line-indent: (all: true, amount: firstline-indent.ja),
-        justify: true,
+      common-body.paragraph(
+        main-chapter-pages(body),
+        config: thesis-paragraph-config,
       )
-      main-chapter-pages(body)
     }
 
-    if bibliography_file != none and bibliography_style == "hayagriva" {
-      render_bibliography_if_needed()
+    if bibliography-file != none and bibliography-style == "hayagriva" {
+      render-bibliography-if-needed()
     }
   }
 }
 
-// LATEX character
-#let LATEX = {
+// latex character
+#let latex = {
   [L]
   box(move(
     dx: -4.2pt,

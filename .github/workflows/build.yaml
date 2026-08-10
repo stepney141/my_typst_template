@@ -1,51 +1,46 @@
-name: Build Typst document
-on: [push, workflow_dispatch]
+name: Test Typst templates
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
 
 jobs:
-  build-thesis-template:
-    runs-on: ubuntu-latest
+  test:
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Create directory
-        run: |
-          mkdir -p $GITHUB_WORKSPACE/downloads/fonts
-          mkdir -p $GITHUB_WORKSPACE/downloads/typst
-
-      - name: Install Japanese fonts (apt) and other depdnencies
+      - name: Install fonts
         run: |
           echo ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true | sudo debconf-set-selections
-          sudo apt-get update && sudo apt-get install -y fonts-noto fonts-ipafont ttf-mscorefonts-installer wget unzip xz-utils
-          fc-cache -fv
-
-      - name: Install Japanese fonts (zip)
-        run: |
-          cd $GITHUB_WORKSPACE/downloads
-          wget "https://github.com/yuru7/udev-gothic/releases/download/v1.3.1/UDEVGothic_v1.3.1.zip" 
-          unzip UDEVGothic_v1.3.1.zip -d ./fonts/UDEVGothic
-          wget "https://github.com/adobe-fonts/source-han-serif/releases/download/2.002R/12_SourceHanSerifJP.zip"
-          unzip 12_SourceHanSerifJP.zip -d ./fonts/SourceHanSerifJP
+          sudo apt-get update
+          sudo apt-get install -y \
+            fonts-inter \
+            fonts-ipafont \
+            fonts-noto \
+            fonts-urw-base35 \
+            ttf-mscorefonts-installer \
+            unzip \
+            wget
+          mkdir -p "$RUNNER_TEMP/fonts"
+          wget -q \
+            "https://github.com/yuru7/udev-gothic/releases/download/v1.3.1/UDEVGothic_v1.3.1.zip" \
+            -O "$RUNNER_TEMP/UDEVGothic.zip"
+          unzip -q "$RUNNER_TEMP/UDEVGothic.zip" -d "$RUNNER_TEMP/fonts/UDEVGothic"
+          wget -q \
+            "https://github.com/adobe-fonts/source-han-serif/releases/download/2.002R/12_SourceHanSerifJP.zip" \
+            -O "$RUNNER_TEMP/SourceHanSerifJP.zip"
+          unzip -q "$RUNNER_TEMP/SourceHanSerifJP.zip" -d "$RUNNER_TEMP/fonts/SourceHanSerifJP"
+          fc-cache -f
 
       - name: Install Typst
-        uses: typst-community/setup-typst@v3
-
-      - name: Typst (卒論・修論)
-        run: typst compile 卒論・修論用/main.typ 卒論・修論用/main.pdf --font-path $GITHUB_WORKSPACE/downloads/fonts 
-
-      - name: Typst (リアペ・レポート)
-        run: typst compile リアペ・レポート用/main.typ リアペ・レポート用/main.pdf --font-path $GITHUB_WORKSPACE/downloads/fonts
-
-      - name: Upload PDF file
-        uses: actions/upload-artifact@v4
+        uses: typst-community/setup-typst@v5
         with:
-          name: PDF
-          path: "*.pdf"
+          typst-version: 0.15.1
 
-      - name: Clean up
-        run: rm -rf $GITHUB_WORKSPACE/downloads && rm -rf typst
-
-      - name: Git Auto Commit
-        uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: "[CI] Auto-compiled to PDF"
+      - name: Run regression tests
+        env:
+          TYPST_TEST_FONT_PATH: ${{ runner.temp }}/fonts
+        run: ./scripts/test.sh
